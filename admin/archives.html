@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Archives — Maison Matière</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    *{-webkit-tap-highlight-color:transparent}
+    body{background:var(--plaster)}
+    .topbar{background:#fff;border-bottom:1px solid var(--line);padding:14px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .topbar .brand{font-family:"Space Grotesk";font-weight:600;letter-spacing:.16em;text-transform:uppercase;font-size:14px}
+    .back{font-family:"Space Mono";font-size:11px;color:var(--stone);cursor:pointer;text-decoration:none}
+    .back:hover{color:var(--ink)}
+    .page{max-width:960px;margin:24px auto;padding:0 16px}
+    .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center}
+    .filter-btn{font-family:"Space Mono";font-size:11px;padding:6px 16px;border-radius:100px;border:1.5px solid var(--line);background:#fff;cursor:pointer;transition:all .15s}
+    .filter-btn.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+    .search-input{font-family:"Hanken Grotesk";font-size:14px;padding:8px 14px;border:1.5px solid var(--line);border-radius:100px;background:#fff;outline:none;min-width:200px}
+    .search-input:focus{border-color:var(--sand)}
+    .doc-row{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:16px;margin-bottom:8px}
+    .doc-row:hover{border-color:var(--sand)}
+    .doc-icon{font-size:26px;flex:none}
+    .doc-info{flex:1;min-width:0}
+    .doc-nom{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .doc-client{font-family:"Space Mono";font-size:11px;color:var(--stone);margin-top:3px}
+    .doc-montant{font-family:"Space Grotesk";font-size:16px;font-weight:700;flex:none;min-width:90px;text-align:right}
+    .badge{font-family:"Space Mono";font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:20px;flex:none}
+    .badge-devis{background:#f0f4ff;color:#3a5bbf}
+    .badge-facture{background:#fff8ee;color:#b06010}
+    .badge-paye{background:#e8f5e9;color:#2e7d32}
+    .badge-attente{background:#fff3f3;color:#c0392b}
+    .doc-date{font-family:"Space Mono";font-size:10px;color:var(--stone);flex:none;text-align:right;min-width:70px}
+    .empty{text-align:center;padding:60px 0;color:var(--stone)}
+    .total-bar{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 20px;display:flex;gap:24px;flex-wrap:wrap;margin-bottom:20px}
+    .total-item .lbl{font-family:"Space Mono";font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--stone)}
+    .total-item .val{font-family:"Space Grotesk";font-size:20px;font-weight:700;margin-top:4px}
+    @media(max-width:600px){
+      .doc-row{flex-wrap:wrap;gap:10px}
+      .doc-montant{min-width:auto}
+      .doc-date{min-width:auto}
+      .search-input{width:100%}
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back" href="dashboard.html">← Tableau de bord</a>
+  <div class="brand">Archives</div>
+</div>
+
+<div class="page">
+  <!-- Totaux -->
+  <div class="total-bar" id="totalBar">
+    <div class="total-item"><div class="lbl">Total devis</div><div class="val" id="totDevis">—</div></div>
+    <div class="total-item"><div class="lbl">Total facturé</div><div class="val" id="totFacture">—</div></div>
+    <div class="total-item"><div class="lbl">Encaissé</div><div class="val" id="totPaye" style="color:#2e7d32">—</div></div>
+    <div class="total-item"><div class="lbl">En attente</div><div class="val" id="totAttente" style="color:#c0392b">—</div></div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filters">
+    <button class="filter-btn active" onclick="filtrer('tous', this)">Tous</button>
+    <button class="filter-btn" onclick="filtrer('devis', this)">Devis</button>
+    <button class="filter-btn" onclick="filtrer('facture', this)">Factures</button>
+    <button class="filter-btn" onclick="filtrer('paye', this)">Payées</button>
+    <button class="filter-btn" onclick="filtrer('en-attente', this)">En attente</button>
+    <input class="search-input" id="searchInput" placeholder="Rechercher un client…" oninput="afficher()">
+  </div>
+
+  <div id="liste">Chargement…</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let tousLesDocs = [];
+let filtreActif = 'tous';
+
+sb.auth.getSession().then(({ data }) => {
+  if (!data.session) location.href = 'index.html';
+  else charger();
+});
+
+async function charger() {
+  // Récupérer documents + nom client via jointure
+  const { data: docs } = await sb.from('documents')
+    .select('*, chantiers(client_nom)')
+    .order('created_at', { ascending: false });
+
+  tousLesDocs = (docs || []).map(d => ({
+    ...d,
+    client_nom: d.chantiers?.client_nom || 'Client inconnu'
+  }));
+
+  // Totaux
+  const totDevis = tousLesDocs.filter(d => d.type === 'devis').reduce((s, d) => s + (d.montant || 0), 0);
+  const totFacture = tousLesDocs.filter(d => d.type === 'facture').reduce((s, d) => s + (d.montant || 0), 0);
+  const totPaye = tousLesDocs.filter(d => d.type === 'facture' && d.statut === 'paye').reduce((s, d) => s + (d.montant || 0), 0);
+  const totAttente = tousLesDocs.filter(d => d.type === 'facture' && d.statut === 'en-attente').reduce((s, d) => s + (d.montant || 0), 0);
+  document.getElementById('totDevis').textContent = totDevis.toLocaleString('fr-FR') + ' €';
+  document.getElementById('totFacture').textContent = totFacture.toLocaleString('fr-FR') + ' €';
+  document.getElementById('totPaye').textContent = totPaye.toLocaleString('fr-FR') + ' €';
+  document.getElementById('totAttente').textContent = totAttente.toLocaleString('fr-FR') + ' €';
+
+  afficher();
+}
+
+function filtrer(type, btn) {
+  filtreActif = type;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  afficher();
+}
+
+function afficher() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  let liste = tousLesDocs;
+
+  if (filtreActif === 'devis') liste = liste.filter(d => d.type === 'devis');
+  else if (filtreActif === 'facture') liste = liste.filter(d => d.type === 'facture');
+  else if (filtreActif === 'paye') liste = liste.filter(d => d.statut === 'paye');
+  else if (filtreActif === 'en-attente') liste = liste.filter(d => d.statut === 'en-attente');
+
+  if (search) liste = liste.filter(d => d.client_nom.toLowerCase().includes(search) || d.nom.toLowerCase().includes(search));
+
+  const el = document.getElementById('liste');
+  if (liste.length === 0) {
+    el.innerHTML = '<div class="empty"><p>Aucun document trouvé.</p></div>';
+    return;
+  }
+
+  el.innerHTML = liste.map(d => {
+    const date = new Date(d.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+    const statutBadge = d.type === 'facture'
+      ? `<span class="badge ${d.statut === 'paye' ? 'badge-paye' : 'badge-attente'}">${d.statut === 'paye' ? '✓ Payé' : 'En attente'}</span>`
+      : '';
+    return `
+      <div class="doc-row">
+        <div class="doc-icon">${d.type === 'devis' ? '📋' : '🧾'}</div>
+        <div class="doc-info">
+          <div class="doc-nom">${d.nom}</div>
+          <div class="doc-client">${d.client_nom} · <span class="badge ${d.type === 'devis' ? 'badge-devis' : 'badge-facture'}" style="display:inline;padding:2px 8px">${d.type}</span></div>
+        </div>
+        ${statutBadge}
+        <div class="doc-montant">${d.montant ? d.montant.toLocaleString('fr-FR') + ' €' : '—'}</div>
+        <div class="doc-date">${date}</div>
+        ${d.fichier_url ? `<a href="${d.fichier_url}" target="_blank" class="btn ghost" style="font-size:12px;padding:6px 12px;flex:none">Voir</a>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demandes de devis — Maison Matière</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    *{-webkit-tap-highlight-color:transparent}
+    body{background:var(--plaster)}
+    .topbar{background:#fff;border-bottom:1px solid var(--line);padding:14px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .topbar .brand{font-family:"Space Grotesk";font-weight:600;letter-spacing:.16em;text-transform:uppercase;font-size:14px}
+    .back{font-family:"Space Mono";font-size:11px;color:var(--stone);text-decoration:none;margin-left:auto}
+    .back:hover{color:var(--ink)}
+    .page{max-width:960px;margin:24px auto;padding:0 16px}
+    .lead-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:12px}
+    .lead-card.traite{opacity:.6}
+    .lead-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+    .lead-card h3{margin:0;font-size:16px}
+    .lead-meta{font-family:"Space Mono";font-size:11px;color:var(--stone);margin-top:3px}
+    .lead-types{display:inline-block;background:var(--plaster);border-radius:6px;padding:2px 8px;font-family:"Space Mono";font-size:10px;color:var(--sand);text-transform:uppercase;margin-top:8px}
+    .lead-msg{font-size:14px;margin:10px 0 0;color:var(--ink2)}
+    .lead-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .badge-new{background:#e8f5e9;color:#2e7d32;font-family:"Space Mono";font-size:10px;text-transform:uppercase;padding:3px 9px;border-radius:20px}
+    .empty{text-align:center;padding:60px 0;color:var(--stone)}
+    .mini{font-family:"Space Mono";font-size:11px;color:#c0392b;border:none;background:none;cursor:pointer}
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Maison Matière</div>
+  <span style="font-size:14px;color:var(--stone)">Demandes de devis</span>
+  <a class="back" href="dashboard.html">← Tableau de bord</a>
+</div>
+
+<div class="page">
+  <div id="liste">Chargement…</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+sb.auth.getSession().then(({ data }) => {
+  if (!data.session) location.href = 'index.html';
+  else charger();
+});
+
+function esc(s){ return (s==null?'':''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+async function charger() {
+  const { data, error } = await sb.from('leads').select('*').order('created_at', { ascending: false });
+  const el = document.getElementById('liste');
+  if (error) { el.innerHTML = '<div class="empty"><p>La table « leads » n\'existe pas encore.</p><p>Exécutez le script SQL fourni dans Supabase.</p></div>'; return; }
+  if (!data || data.length === 0) { el.innerHTML = '<div class="empty"><p>Aucune demande pour l\'instant.</p></div>'; return; }
+  el.innerHTML = data.map(l => {
+    const nom = `${esc(l.prenom||'')} ${esc(l.nom||'')}`.trim() || 'Demande';
+    const d = new Date(l.created_at).toLocaleDateString('fr-FR') + ' ' + new Date(l.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    return `
+    <div class="lead-card ${l.statut==='traite'?'traite':''}">
+      <div class="lead-top">
+        <div>
+          <h3>${nom} ${l.statut!=='traite'?'<span class="badge-new">Nouveau</span>':''}</h3>
+          <div class="lead-meta">${d}${l.email?' · '+esc(l.email):''}${l.telephone?' · '+esc(l.telephone):''}</div>
+          ${l.types?`<span class="lead-types">${esc(l.types)}</span>`:''}
+        </div>
+      </div>
+      ${l.message?`<p class="lead-msg">${esc(l.message)}</p>`:''}
+      <div class="lead-actions">
+        <button class="btn" onclick='creerChantier(${JSON.stringify(l)})'>+ Créer le chantier</button>
+        ${l.email?`<a class="btn ghost" href="mailto:${esc(l.email)}">Répondre</a>`:''}
+        ${l.telephone?`<a class="btn ghost" href="tel:${esc(l.telephone)}">Appeler</a>`:''}
+        <button class="btn ghost" onclick="marquer('${l.id}','${l.statut==='traite'?'nouveau':'traite'}')">${l.statut==='traite'?'Rouvrir':'Marquer traité'}</button>
+        <button class="mini" onclick="supprimer('${l.id}')">Supprimer</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function creerChantier(l) {
+  const nom = `${l.prenom||''} ${l.nom||''}`.trim() || 'Nouveau client';
+  const { data, error } = await sb.from('chantiers').insert({ client_nom: nom, progression: 0 }).select().single();
+  if (error) { alert('Erreur : ' + error.message); return; }
+  // Tente d'enregistrer l'e-mail client (si la colonne existe)
+  if (l.email && data) { try { await sb.from('chantiers').update({ client_email: l.email }).eq('id', data.id); } catch (e) {} }
+  await sb.from('leads').update({ statut: 'traite' }).eq('id', l.id);
+  location.href = 'chantier.html?id=' + data.id;
+}
+
+async function marquer(id, statut) {
+  await sb.from('leads').update({ statut }).eq('id', id);
+  charger();
+}
+
+async function supprimer(id) {
+  if (!confirm('Supprimer cette demande ?')) return;
+  await sb.from('leads').delete().eq('id', id);
+  charger();
+}
+</script>
+</body>
+</html>

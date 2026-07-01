@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maison Matière — Devis modifiable</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1E2127; --stone:#7C766C; --line:#E4DFD5; --line-2:#F0ECE4;
+    --paper:#FFFFFF; --panel:#F6F3ED; --sand:#9C8E76; --edit:#1E6B4D;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#DED9D0;font-family:"Hanken Grotesk",system-ui,sans-serif;color:var(--ink);
+    -webkit-font-smoothing:antialiased;line-height:1.45;
+    background-image:radial-gradient(circle at 1px 1px,rgba(30,33,39,.03) 1px,transparent 0);background-size:22px 22px}
+  .toolbar{position:sticky;top:0;z-index:10;background:#1E2127;color:#fff;display:flex;gap:8px;flex-wrap:wrap;
+    align-items:center;padding:11px 16px}
+  .toolbar .ttl{font-family:"Space Grotesk";font-weight:600;font-size:13px;letter-spacing:.04em;margin-right:auto}
+  .toolbar a.back{font-family:"Space Mono";font-size:11px;color:#aeb4ba;text-decoration:none;margin-right:12px}
+  .toolbar a.back:hover{color:#fff}
+  .toolbar button{font-family:"Hanken Grotesk";font-weight:600;font-size:13px;border:none;cursor:pointer;
+    padding:9px 14px;border-radius:9px;background:#33373f;color:#fff}
+  .toolbar button.primary{background:#fff;color:#1E2127}
+  .toolbar .hint{font-family:"Space Mono";font-size:10px;color:#aeb4ba;letter-spacing:.04em;width:100%;margin-top:2px}
+  .sheet{background:var(--paper);max-width:820px;margin:26px auto;padding:46px 50px 40px;
+    box-shadow:0 12px 40px rgba(30,33,39,.13);border-radius:3px}
+  [contenteditable]{outline:none;border-radius:3px;transition:background .12s}
+  [contenteditable]:hover{background:#eef4f0}
+  [contenteditable]:focus{background:#e3efe8;box-shadow:inset 0 0 0 1px var(--edit)}
+  [contenteditable]:empty:before{content:attr(data-ph);color:#bcb6aa}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding-bottom:22px;border-bottom:2px solid var(--ink)}
+  .logo{display:inline-flex;align-items:center;justify-content:center;background:#F2E7D9;border:1px solid #C6BDB1;border-radius:16px;padding:10px 18px;box-shadow:0 2px 14px rgba(30,33,39,.10),inset 0 0 0 3px rgba(255,255,255,.35)}
+  .wordmark b{font-family:"Space Grotesk";font-weight:600;font-size:19px;letter-spacing:.18em;text-transform:uppercase;display:block;line-height:1}
+  .wordmark small{font-family:"Space Mono";font-size:9px;letter-spacing:.32em;text-transform:uppercase;color:var(--stone);display:block;margin-top:5px}
+  .doctype{text-align:right}
+  .doctype h1{font-family:"Space Grotesk";font-weight:700;font-size:30px;margin:0;letter-spacing:.02em}
+  .doctype .no{font-family:"Space Mono";font-size:12px;color:var(--stone);margin-top:4px}
+  .parties{display:flex;justify-content:space-between;gap:30px;margin:24px 0 6px}
+  .block{font-size:13px}
+  .block .k{font-family:"Space Mono";font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--stone);margin-bottom:6px}
+  .block .name{font-weight:700;font-size:14px;margin-bottom:2px}
+  .block .l{color:#3c4047}
+  .right{text-align:right}
+  .metarow{display:flex;margin:22px 0 4px;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .metarow .cell{flex:1;padding:10px 14px;border-right:1px solid var(--line)}
+  .metarow .cell:last-child{border-right:none}
+  .metarow .k{font-family:"Space Mono";font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--stone)}
+  .metarow .v{font-weight:600;font-size:13.5px;margin-top:3px}
+  table{width:100%;border-collapse:collapse;margin-top:22px;font-size:13px}
+  thead th{font-family:"Space Mono";font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--stone);
+    text-align:right;padding:0 10px 9px;border-bottom:1.5px solid var(--ink);font-weight:700}
+  thead th.l{text-align:left}
+  tbody td{padding:9px 10px;border-bottom:1px solid var(--line-2);text-align:right;vertical-align:top}
+  tbody td.l{text-align:left}
+  tbody td.l small{display:block;color:var(--stone);font-size:11.5px;margin-top:1px}
+  .num{font-variant-numeric:tabular-nums}
+  .rowctl{width:26px;padding:0!important;border:none!important;vertical-align:middle}
+  .rowctl button{border:none;background:none;color:#c3392f;cursor:pointer;font-size:16px;line-height:1;opacity:.5}
+  .rowctl button:hover{opacity:1}
+  .addrow{margin-top:10px}
+  .addrow button{font-family:"Hanken Grotesk";font-weight:600;font-size:12px;border:1px dashed var(--line);
+    background:none;color:var(--stone);cursor:pointer;padding:7px 12px;border-radius:8px}
+  .addrow button:hover{color:var(--ink);border-color:var(--ink)}
+  .totwrap{display:flex;justify-content:space-between;gap:30px;margin-top:24px}
+  .pay{flex:1;font-size:12px;color:#3c4047}
+  .pay .k{font-family:"Space Mono";font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone);margin-bottom:5px}
+  .totals{width:300px;flex:none}
+  .totals .row{display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid var(--line-2)}
+  .totals .row .lbl{color:#3c4047}
+  .totals .deduct{color:var(--sand);font-weight:600}
+  .totals .grand{margin-top:8px;background:var(--ink);color:#fff;border-radius:10px;padding:13px 16px;display:flex;justify-content:space-between;align-items:center}
+  .totals .grand .lbl{font-family:"Space Grotesk";font-weight:600;font-size:13px;letter-spacing:.04em}
+  .totals .grand .amt{font-family:"Space Grotesk";font-weight:700;font-size:21px}
+  .legal{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);font-size:10.5px;color:var(--stone);line-height:1.6}
+  .legal .strong{color:#3c4047}
+  .pill{display:inline-block;background:var(--panel);color:var(--ink);font-family:"Space Mono";font-size:9px;
+    letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:5px;font-weight:700;margin-bottom:8px;border:1px solid var(--line)}
+  .signbox{margin-top:24px;border:1px dashed var(--line);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;gap:20px;font-size:12px;color:#3c4047}
+  .signbox .mono{font-family:"Space Mono";font-size:9.5px;letter-spacing:.06em;color:var(--stone);text-transform:uppercase}
+  .minidel{border:none;background:none;color:#c3392f;cursor:pointer;font-size:12px;line-height:1;opacity:.55;margin-left:7px;vertical-align:middle}
+  .minidel:hover{opacity:1}
+  .acaddrow{margin-top:10px;text-align:right}
+  .acaddrow button{font-family:"Hanken Grotesk";font-weight:600;font-size:12px;border:1px dashed var(--line);background:none;color:var(--stone);cursor:pointer;padding:6px 11px;border-radius:8px}
+  .acaddrow button:hover{color:var(--ink);border-color:var(--ink)}
+  .capturing .rowctl,.capturing .addrow,.capturing .minidel,.capturing .acaddrow{display:none!important}
+  @media print{
+    body{background:#fff;background-image:none}
+    .toolbar,.addrow,.rowctl,.minidel,.acaddrow{display:none!important}
+    .sheet{box-shadow:none;margin:0;max-width:none;padding:0 8mm;border-radius:0}
+    [contenteditable]:hover,[contenteditable]:focus{background:none!important;box-shadow:none!important}
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+  @media (max-width:560px){
+    .sheet{padding:28px 20px}
+    .parties,.totwrap{flex-direction:column;gap:16px}
+    .totals{width:100%}
+    .metarow{flex-wrap:wrap}.metarow .cell{flex:1 0 50%;border-bottom:1px solid var(--line)}
+    .head{flex-direction:column}.doctype{text-align:left}
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.14.0/dist/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+<div class="toolbar">
+  <a class="back" href="dashboard.html">← Tableau de bord</a>
+  <span class="ttl">Maison Matière · Devis modifiable</span>
+  <button class="primary" onclick="telechargerPDF()">Télécharger le PDF</button>
+  <button onclick="printPDF()">Imprimer</button>
+  <button onclick="addRow()">+ Ligne</button>
+  <button onclick="numeroAuto()">N° auto</button>
+  <select id="chSelect" style="font-family:inherit;font-size:13px;padding:8px 10px;border-radius:9px;border:none;max-width:170px"><option value="">— Lier à un chantier —</option></select>
+  <button class="primary" onclick="envoyerClient()">📤 Envoyer au client</button>
+  <button onclick="saveHTML()">Enregistrer le modèle</button>
+  <div class="hint">Cliquez sur un texte pour le modifier. « N° auto » propose le prochain numéro · « Envoyer au client » dépose le devis directement dans son espace de suivi.</div>
+</div>
+
+<section class="sheet">
+  <div class="head">
+    <img src="../assets/logo.png" alt="Maison Matière — Plâtrerie & finitions" style="height:96px;width:auto;display:block"
+         onerror="this.style.display='none';this.insertAdjacentHTML('afterend','&lt;div class=&quot;logo&quot;&gt;&lt;div class=&quot;wordmark&quot;&gt;&lt;b&gt;Maison Matière&lt;/b&gt;&lt;small&gt;Plâtrerie &amp;amp; finitions&lt;/small&gt;&lt;/div&gt;&lt;/div&gt;')">
+    <div class="doctype">
+      <h1>DEVIS</h1>
+      <div class="no">N° <span contenteditable>DEV-2026-0042</span> · <span contenteditable>23 juin 2026</span></div>
+    </div>
+  </div>
+
+  <div class="parties">
+    <div class="block">
+      <div class="k">Émis par</div>
+      <div class="name" contenteditable>Maison Matière — SARL</div>
+      <div class="l" contenteditable>12 rue des Artisans</div>
+      <div class="l" contenteditable>18000 Bourges</div>
+      <div class="l" contenteditable>06 99 83 56 52 · maisonmatiere58@gmail.com</div>
+    </div>
+    <div class="block right">
+      <div class="k">Adressé à</div>
+      <div class="name" contenteditable data-ph="Nom du client">Mme Camille Lemoine</div>
+      <div class="l" contenteditable data-ph="Adresse">8 rue du Cygne</div>
+      <div class="l" contenteditable data-ph="Code postal, ville">18000 Bourges</div>
+      <div class="l" contenteditable data-ph="Chantier">Chantier : séjour &amp; cuisine</div>
+    </div>
+  </div>
+
+  <div class="metarow">
+    <div class="cell"><div class="k">Date du devis</div><div class="v" contenteditable>23/06/2026</div></div>
+    <div class="cell"><div class="k">Validité</div><div class="v" contenteditable>3 mois</div></div>
+    <div class="cell"><div class="k">Début prévu</div><div class="v" contenteditable>Semaine 27</div></div>
+    <div class="cell"><div class="k">Durée estimée</div><div class="v" contenteditable>≈ 8 jours</div></div>
+  </div>
+
+  <table>
+    <thead><tr>
+      <th class="l">Désignation</th><th>Qté</th><th>Unité</th><th>PU HT</th><th>Total HT</th><th class="rowctl"></th>
+    </tr></thead>
+    <tbody id="lines">
+      <tr>
+        <td class="l"><div contenteditable data-ph="Désignation">Cloisons &amp; doublages</div><small contenteditable data-ph="Détail (optionnel)">Placo BA13, doublage isolant cuisine, réservation verrière</small></td>
+        <td class="num"><span class="qty" contenteditable>1</span></td>
+        <td><span contenteditable>ens.</span></td>
+        <td class="num"><span class="pu" contenteditable>1215</span></td>
+        <td class="num total">1 215,00 €</td>
+        <td class="rowctl"><button title="Supprimer" onclick="delRow(this)">×</button></td>
+      </tr>
+      <tr>
+        <td class="l"><div contenteditable>Enduits de lissage &amp; préparation des supports</div><small contenteditable>Murs séjour, 2 passes + ponçage</small></td>
+        <td class="num"><span class="qty" contenteditable>1</span></td>
+        <td><span contenteditable>ens.</span></td>
+        <td class="num"><span class="pu" contenteditable>1120</span></td>
+        <td class="num total">1 120,00 €</td>
+        <td class="rowctl"><button title="Supprimer" onclick="delRow(this)">×</button></td>
+      </tr>
+      <tr>
+        <td class="l"><div contenteditable>Béton ciré — plan de travail &amp; crédence cuisine</div><small contenteditable>Application + protection hydrofuge</small></td>
+        <td class="num"><span class="qty" contenteditable>1</span></td>
+        <td><span contenteditable>ens.</span></td>
+        <td class="num"><span class="pu" contenteditable>1300</span></td>
+        <td class="num total">1 300,00 €</td>
+        <td class="rowctl"><button title="Supprimer" onclick="delRow(this)">×</button></td>
+      </tr>
+      <tr>
+        <td class="l"><div contenteditable>Protection &amp; nettoyage de fin de chantier</div><small contenteditable data-ph="Détail (optionnel)"></small></td>
+        <td class="num"><span class="qty" contenteditable>1</span></td>
+        <td><span contenteditable>forf.</span></td>
+        <td class="num"><span class="pu" contenteditable>150</span></td>
+        <td class="num total">150,00 €</td>
+        <td class="rowctl"><button title="Supprimer" onclick="delRow(this)">×</button></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="addrow"><button onclick="addRow()">+ Ajouter une ligne</button></div>
+
+  <div class="totwrap">
+    <div class="pay">
+      <div class="k">Conditions</div>
+      Taux horaire main d'œuvre : <span contenteditable>42</span> €/h HT.<br>
+      Acompte de <span class="acompterate" contenteditable>30</span> % à la commande, solde à la fin des travaux.<br>
+      TVA <span class="tvarate" contenteditable>10</span> % (rénovation, logement de plus de 2 ans).<br>
+      Devis gratuit.
+    </div>
+    <div class="totals">
+      <div class="row"><span class="lbl">Total HT</span><span class="num" id="tHT">3 785,00 €</span></div>
+      <div class="row"><span class="lbl">TVA <span class="tvarate2">10</span> %</span><span class="num" id="tTVA">378,50 €</span></div>
+      <div class="grand"><span class="lbl">Total TTC</span><span class="amt num" id="tTTC">4 163,50 €</span></div>
+      <div class="row deduct" id="acompteRow" style="margin-top:8px"><span class="lbl">Acompte à la commande (<span class="acompterate2">30</span> %)<button class="minidel" title="Supprimer" onclick="removeAcompte()">✕</button></span><span class="num" id="tACO">1 249,05 €</span></div>
+    </div>
+  </div>
+
+  <div class="signbox">
+    <div><span class="mono">Mention manuscrite obligatoire</span><br>« Bon pour accord — devis reçu avant l'exécution des travaux »</div>
+    <div class="right"><span class="mono">Date &amp; signature du client</span><br>&nbsp;</div>
+  </div>
+
+  <div class="legal">
+    <span class="pill">Mentions légales</span><br>
+    <span class="strong">Maison Matière</span> — SARL au capital de <span contenteditable>10 000 €</span> · Siège : <span contenteditable>12 rue des Artisans, 18000 Bourges</span><br>
+    SIRET <span contenteditable data-ph="SIRET">000 000 000 00000</span> · RM <span contenteditable>000 000 000</span> Bourges · TVA intracom. <span contenteditable>FR00 000000000</span><br>
+    Assurance décennale &amp; RC Pro : <span contenteditable data-ph="Assureur">[Assureur]</span>, contrat n° <span contenteditable>[000000]</span> — couverture : France métropolitaine.
+  </div>
+</section>
+
+<script>
+  function parseNum(s){
+    if(s==null) return 0;
+    s=(''+s).replace(/[^0-9,.\-]/g,'').replace(/\s/g,'');
+    if(s.indexOf(',')>-1 && s.indexOf('.')>-1){ s=s.replace(/\./g,'').replace(',','.'); }
+    else { s=s.replace(',','.'); }
+    var n=parseFloat(s); return isNaN(n)?0:n;
+  }
+  function fmt(n){ return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'; }
+
+  function recalc(){
+    var rows=document.querySelectorAll('#lines tr'), ht=0;
+    rows.forEach(function(tr){
+      var qe=tr.querySelector('.qty'), pe=tr.querySelector('.pu');
+      var q=parseNum(qe?qe.textContent:0);
+      var pu=parseNum(pe?pe.textContent:0);
+      var t=q*pu; ht+=t;
+      var cell=tr.querySelector('.total');
+      if(cell) cell.textContent = (q||pu)? fmt(t):'—';
+    });
+    var rate=parseNum(document.querySelector('.tvarate').textContent)/100;
+    var tva=ht*rate, ttc=ht+tva;
+    var acrEl=document.querySelector('.acompterate');
+    var acr=acrEl?parseNum(acrEl.textContent)/100:0;
+    document.getElementById('tHT').textContent=fmt(ht);
+    document.getElementById('tTVA').textContent=fmt(tva);
+    document.getElementById('tTTC').textContent=fmt(ttc);
+    var acoEl=document.getElementById('tACO'); if(acoEl) acoEl.textContent=fmt(ttc*acr);
+    var r=document.querySelector('.tvarate').textContent.trim();
+    document.querySelector('.tvarate2').textContent=r;
+    var a2=document.querySelector('.acompterate2'); if(a2&&acrEl) a2.textContent=acrEl.textContent.trim();
+  }
+
+  document.addEventListener('input', function(e){
+    if(e.target.closest('#lines') || e.target.classList.contains('tvarate') || e.target.classList.contains('acompterate')) recalc();
+  });
+
+  function addRow(){
+    var tb=document.getElementById('lines');
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td class="l"><div contenteditable data-ph="Désignation"></div><small contenteditable data-ph="Détail (optionnel)"></small></td>'+
+      '<td class="num"><span class="qty" contenteditable data-ph="0"></span></td>'+
+      '<td><span contenteditable data-ph="u."></span></td>'+
+      '<td class="num"><span class="pu" contenteditable data-ph="0"></span></td>'+
+      '<td class="num total">—</td>'+
+      '<td class="rowctl"><button title="Supprimer" onclick="delRow(this)">×</button></td>';
+    tb.appendChild(tr); recalc();
+  }
+  function delRow(btn){ btn.closest('tr').remove(); recalc(); }
+
+  function printPDF(){ try{ window.print(); }catch(e){} }
+
+  function saveHTML(){
+    document.activeElement && document.activeElement.blur();
+    var html='<!doctype html>\n<html lang="fr">\n'+document.documentElement.outerHTML+'\n</html>';
+    var blob=new Blob([html],{type:'text/html'});
+    var a=document.createElement('a');
+    var ref=document.querySelector('.doctype .no span').textContent.trim().replace(/[^\w\-]/g,'_');
+    a.href=URL.createObjectURL(blob); a.download='devis_'+(ref||'maison_matiere')+'.html';
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  function telechargerPDF(){
+    var sheet=document.querySelector('.sheet');
+    if(typeof html2pdf==='undefined'){ window.print(); return; }
+    if(document.activeElement) document.activeElement.blur();
+    document.body.classList.add('capturing');
+    var refEl=document.querySelector('.doctype .no span'); var ref=(refEl?refEl.textContent:'').trim().replace(/[^\w\-]/g,'_');
+    var opt={margin:[6,6,6,6],filename:'devis_'+(ref||'maison_matiere')+'.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
+    html2pdf().set(opt).from(sheet).save().then(function(){document.body.classList.remove('capturing');}).catch(function(){document.body.classList.remove('capturing');window.print();});
+  }
+  function removeAcompte(){var r=document.getElementById('acompteRow'); if(r) r.remove(); var a=document.getElementById('acAdd'); if(a) a.style.display='block'; recalc();}
+  function addAcompte(){ if(document.getElementById('acompteRow')) return; var ad=document.getElementById('acAdd'); var html='<div class="row deduct" id="acompteRow" style="margin-top:8px"><span class="lbl">Acompte à la commande (<span class="acompterate2">30</span> %)<button class="minidel" title="Supprimer" onclick="removeAcompte()">✕</button></span><span class="num" id="tACO">—</span></div>'; if(ad){ad.insertAdjacentHTML('beforebegin',html);} else {document.querySelector('.totals').insertAdjacentHTML('beforeend',html);} var a=document.getElementById('acAdd'); if(a) a.style.display='none'; recalc(); }
+  (function(){var t=document.querySelector('.totals'); if(t){var d=document.createElement('div'); d.className='acaddrow'; d.id='acAdd'; d.style.display='none'; d.innerHTML='<button onclick="addAcompte()">+ Ajouter un acompte</button>'; t.appendChild(d);}})();
+  recalc();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script>
+const sbDoc = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+(async function () {
+  const { data } = await sbDoc.auth.getSession();
+  if (!data.session) return;
+  const { data: ch } = await sbDoc.from('chantiers').select('id,client_nom').order('created_at', { ascending: false });
+  const sel = document.getElementById('chSelect');
+  (ch || []).forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.client_nom; sel.appendChild(o); });
+})();
+
+async function numeroAuto() {
+  const annee = new Date().getFullYear();
+  let prochain = 1;
+  try {
+    const { data } = await sbDoc.from('compteurs').select('*').eq('type', 'devis').single();
+    if (data) prochain = (data.annee === annee ? (data.dernier || 0) + 1 : 1);
+  } catch (e) {}
+  const num = 'DEV-' + annee + '-' + String(prochain).padStart(4, '0');
+  document.querySelector('.doctype .no span').textContent = num;
+  alert('Numéro proposé : ' + num + '\n(Il sera réservé au moment de l\'envoi au client.)');
+}
+
+async function envoyerClient() {
+  const chId = document.getElementById('chSelect').value;
+  if (!chId) { alert('Choisissez d\'abord un chantier dans la liste déroulante.'); return; }
+  const { data: sess } = await sbDoc.auth.getSession();
+  if (!sess.session) { alert('Connectez-vous d\'abord à l\'espace admin.'); return; }
+  if (typeof html2pdf === 'undefined') { alert('Outil PDF indisponible.'); return; }
+  const sheet = document.querySelector('.sheet');
+  if (document.activeElement) document.activeElement.blur();
+  document.body.classList.add('capturing');
+  const ref = document.querySelector('.doctype .no span').textContent.trim();
+  const montant = parseNum(document.getElementById('tTTC').textContent);
+  let blob;
+  try {
+    blob = await html2pdf().set({ margin: [6, 6, 6, 6], image: { type: 'jpeg', quality: .98 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(sheet).outputPdf('blob');
+  } catch (e) { document.body.classList.remove('capturing'); alert('Erreur PDF : ' + e.message); return; }
+  document.body.classList.remove('capturing');
+  const path = chId + '/devis_' + ref.replace(/[^\w\-]/g, '_') + '_' + Date.now() + '.pdf';
+  const { error: upErr } = await sbDoc.storage.from('documents').upload(path, blob, { upsert: true, contentType: 'application/pdf' });
+  if (upErr) { alert('Erreur upload : ' + upErr.message + '\n\n(Vérifiez la politique du bucket « documents » dans Supabase.)'); return; }
+  const { data: pub } = sbDoc.storage.from('documents').getPublicUrl(path);
+  const { error: insErr } = await sbDoc.from('documents').insert({ chantier_id: chId, type: 'devis', nom: ref, montant: montant || null, statut: 'en-attente', fichier_url: pub.publicUrl });
+  if (insErr) { alert('Erreur enregistrement : ' + insErr.message); return; }
+  const annee = new Date().getFullYear();
+  const m = ref.match(/(\d+)\s*$/); const n = m ? parseInt(m[1]) : null;
+  if (n) { try { await sbDoc.from('compteurs').upsert({ type: 'devis', annee: annee, dernier: n }); } catch (e) {} }
+  alert('✓ Devis déposé dans l\'espace du client !');
+}
+</script>
+</body>
+</html>

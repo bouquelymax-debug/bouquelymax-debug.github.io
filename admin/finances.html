@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Finances — Maison Matière</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    *{-webkit-tap-highlight-color:transparent}
+    body{background:var(--plaster)}
+    .topbar{background:#fff;border-bottom:1px solid var(--line);padding:14px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .topbar .brand{font-family:"Space Grotesk";font-weight:600;letter-spacing:.16em;text-transform:uppercase;font-size:14px}
+    .topbar .sub{font-family:"Space Mono";font-size:11px;color:var(--stone)}
+    .topbar-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .page{max-width:1000px;margin:24px auto;padding:0 16px}
+    .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+    @media(max-width:760px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:460px){.stats-grid{grid-template-columns:1fr}}
+    .stat-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px}
+    .stat-card .label{font-family:"Space Mono";font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--stone)}
+    .stat-card .value{font-family:"Space Grotesk";font-size:23px;font-weight:700;margin-top:6px}
+    .stat-card.green .value{color:#2e7d32}.stat-card.red .value{color:#e74c3c}.stat-card.blue .value{color:#185fa5}
+    .stat-card.dark{background:var(--ink)}.stat-card.dark .value{color:#fff}.stat-card.dark .label{color:var(--cream)}
+    .charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+    @media(max-width:760px){.charts{grid-template-columns:1fr}}
+    .panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px}
+    .panel h3{margin:0 0 14px;font-size:16px}
+    .chart-box{position:relative;height:230px}
+    select,input{font-family:inherit;font-size:14px;border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:#fff}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th{text-align:left;font-family:"Space Mono";font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--stone);padding:8px;border-bottom:1.5px solid var(--ink)}
+    td{padding:8px;border-bottom:1px solid var(--line)}
+    td.r,th.r{text-align:right}
+    .tag{font-family:"Space Mono";font-size:10px;text-transform:uppercase;padding:2px 7px;border-radius:5px}
+    .tag.devis{background:#f0f4ff;color:#3a5bbf}.tag.facture{background:#fff8ee;color:#b06010}
+    .tag.paye{background:#e8f5e9;color:#2e7d32}.tag.attente{background:#fff3f3;color:#c0392b}
+    .exp-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end;margin-top:12px}
+    .exp-form label{font-family:"Space Mono";font-size:10px;text-transform:uppercase;color:var(--stone);margin-bottom:4px;display:block}
+    .exp-form input,.exp-form select{width:100%}
+    .mini{font-family:"Space Mono";font-size:11px;color:#c0392b;border:none;background:none;cursor:pointer}
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="brand">Maison Matière</div>
+    <div class="sub">Tableau de bord financier</div>
+  </div>
+  <div class="topbar-actions">
+    <select id="anneeSel" onchange="rendre()"></select>
+    <button class="btn" onclick="exporterExcel()">⬇ Exporter en Excel</button>
+    <button class="btn ghost" onclick="location.href='dashboard.html'">← Retour</button>
+  </div>
+</div>
+
+<div class="page">
+  <div class="stats-grid">
+    <div class="stat-card blue"><div class="label">Devis émis</div><div class="value" id="s-devis">—</div></div>
+    <div class="stat-card"><div class="label">Chiffre d'affaires facturé</div><div class="value" id="s-facture">—</div></div>
+    <div class="stat-card green"><div class="label">Encaissé (payé)</div><div class="value" id="s-paye">—</div></div>
+    <div class="stat-card red"><div class="label">En attente de paiement</div><div class="value" id="s-attente">—</div></div>
+    <div class="stat-card"><div class="label">Dépenses</div><div class="value" id="s-depenses">—</div></div>
+    <div class="stat-card"><div class="label">Charges récurrentes / an</div><div class="value" id="s-recur">—</div></div>
+    <div class="stat-card dark"><div class="label">Bénéfice net (encaissé − dépenses)</div><div class="value" id="s-benef">—</div></div>
+  </div>
+
+  <div class="charts">
+    <div class="panel"><h3>Encaissé par mois</h3><div class="chart-box"><canvas id="chMois"></canvas></div></div>
+    <div class="panel"><h3>Dépenses par catégorie</h3><div class="chart-box"><canvas id="chDep"></canvas></div></div>
+  </div>
+
+  <div class="panel" style="margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <h3 style="margin:0">Dépenses</h3>
+      <div>
+        <button class="btn ghost" type="button" onclick="document.getElementById('scanFile').click()">📷 Scanner une facture</button>
+        <input type="file" id="scanFile" accept="image/*,application/pdf" style="display:none" onchange="if(this.files[0])scannerFacture(this.files[0])">
+        <span id="scanStatus" style="font-family:'Space Mono';font-size:11px;color:var(--stone);margin-left:8px"></span>
+      </div>
+    </div>
+    <form id="expForm" class="exp-form">
+      <div><label>Libellé / fournisseur</label><input id="e-lib" placeholder="ex. Point P" required></div>
+      <div><label>Catégorie</label>
+        <select id="e-cat"><option>Matériaux</option><option>Outillage</option><option>Véhicule</option><option>Carburant</option><option>Sous-traitance</option><option>Assurances</option><option>Charges</option><option>Autre</option></select>
+      </div>
+      <div><label>Montant HT €</label><input id="e-ht" type="number" step="0.01" placeholder="0.00" oninput="calcTTC()"></div>
+      <div><label>TVA €</label><input id="e-tva" type="number" step="0.01" placeholder="0.00" oninput="calcTTC()"></div>
+      <div><label>Montant TTC €</label><input id="e-mont" type="number" step="0.01" placeholder="0.00" required></div>
+      <div><label>Date facture</label><input id="e-date" type="date"></div>
+      <div><label>Récurrence</label>
+        <select id="e-rec"><option value="ponctuel">Ponctuel</option><option value="mensuel">Mensuel</option><option value="annuel">Annuel</option></select>
+      </div>
+      <div><label>Paiement</label>
+        <select id="e-pay" onchange="document.getElementById('e-ech-wrap').style.display=this.value==='echeance'?'block':'none'"><option value="comptant">Au comptant</option><option value="echeance">À échéance</option></select>
+      </div>
+      <div id="e-ech-wrap" style="display:none"><label>Date d'échéance</label><input id="e-ech" type="date"></div>
+      <div><label>Facture (PDF / photo)</label><input id="e-file" type="file" accept="image/*,application/pdf" style="font-size:12px"></div>
+      <div style="grid-column:1/-1"><button class="btn" type="submit">+ Ajouter la dépense</button></div>
+    </form>
+    <div style="overflow-x:auto;margin-top:14px"><table id="tblDep"></table></div>
+  </div>
+
+  <div class="panel">
+    <h3>Devis &amp; factures</h3>
+    <div style="overflow-x:auto"><table id="tblDoc"></table></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="../js/supabase-config.js"></script>
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let DOCS = [], DEPS = [], chMois = null, chDep = null;
+const MOIS = ['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];
+
+sb.auth.getSession().then(({ data }) => {
+  if (!data.session) location.href = 'index.html';
+  else init();
+});
+
+function eur(n){ return (n||0).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €'; }
+function anneeDe(d){ return d ? new Date(d).getFullYear() : null; }
+function toISODate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+// Recrée automatiquement les dépenses récurrentes (mensuel/annuel) pour chaque période écoulée
+async function genererRecurrences(){
+  const modeles = DEPS.filter(d => (d.recurrence==='mensuel'||d.recurrence==='annuel') && !d.parent_id && d.date);
+  if (!modeles.length) return;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const aInserer = [];
+  for (const t of modeles){
+    const base = new Date(t.date);
+    const cle = t.recurrence==='mensuel' ? (d=>toISODate(d).slice(0,7)) : (d=>String(d.getFullYear()));
+    const existants = new Set([cle(base)]);
+    DEPS.filter(d=>d.parent_id===t.id && d.date).forEach(d=>existants.add(cle(new Date(d.date))));
+    for (let i=1; i<=120; i++){
+      const occ = t.recurrence==='mensuel'
+        ? new Date(base.getFullYear(), base.getMonth()+i, base.getDate())
+        : new Date(base.getFullYear()+i, base.getMonth(), base.getDate());
+      if (occ > today) break;
+      const k = cle(occ);
+      if (existants.has(k)) continue;
+      existants.add(k);
+      aInserer.push({ libelle:t.libelle, categorie:t.categorie, montant:t.montant, montant_ht:t.montant_ht, tva:t.tva, montant_ttc:t.montant_ttc, date:toISODate(occ), recurrence:'ponctuel', paiement:t.paiement||'comptant', echeance:null, fichier_url:t.fichier_url, parent_id:t.id });
+    }
+  }
+  if (aInserer.length){
+    const { error } = await sb.from('depenses').insert(aInserer);
+    if (!error){ const { data } = await sb.from('depenses').select('*').order('date',{ascending:false}); DEPS = data||[]; }
+  }
+}
+
+async function init() {
+  const { data: docs } = await sb.from('documents').select('*, chantiers(client_nom)').order('created_at', { ascending: false });
+  DOCS = docs || [];
+  let deps = [];
+  try { const { data } = await sb.from('depenses').select('*').order('date', { ascending: false }); deps = data || []; } catch(e){}
+  DEPS = deps;
+  try { await genererRecurrences(); } catch(e){}
+
+  // Années disponibles
+  const annees = new Set();
+  DOCS.forEach(d => annees.add(anneeDe(d.created_at)));
+  DEPS.forEach(d => annees.add(anneeDe(d.date)));
+  annees.add(new Date().getFullYear());
+  const sel = document.getElementById('anneeSel');
+  sel.innerHTML = '<option value="all">Toutes les années</option>' + [...annees].filter(Boolean).sort((a,b)=>b-a).map(a=>`<option value="${a}">${a}</option>`).join('');
+  sel.value = new Date().getFullYear();
+
+  document.getElementById('e-date').value = new Date().toISOString().split('T')[0];
+  rendre();
+}
+
+function filtre(an) {
+  const docs = an==='all' ? DOCS : DOCS.filter(d => anneeDe(d.created_at) == an);
+  const deps = an==='all' ? DEPS : DEPS.filter(d => anneeDe(d.date) == an);
+  return { docs, deps };
+}
+
+function rendre() {
+  const an = document.getElementById('anneeSel').value;
+  const { docs, deps } = filtre(an);
+
+  const totDevis = docs.filter(d=>d.type==='devis').reduce((s,d)=>s+(+d.montant||0),0);
+  const totFact = docs.filter(d=>d.type==='facture').reduce((s,d)=>s+(+d.montant||0),0);
+  const paye = docs.filter(d=>d.type==='facture'&&d.statut==='paye').reduce((s,d)=>s+(+d.montant||0),0);
+  const attente = docs.filter(d=>d.type==='facture'&&d.statut==='en-attente').reduce((s,d)=>s+(+d.montant||0),0);
+  const totDep = deps.reduce((s,d)=>s+(+d.montant||0),0);
+  const benef = paye - totDep;
+  const recurAn = deps.reduce((s,d)=>{ const m=+d.montant||0; if(d.recurrence==='mensuel') return s+m*12; if(d.recurrence==='annuel') return s+m; return s; },0);
+
+  document.getElementById('s-devis').textContent = eur(totDevis);
+  document.getElementById('s-facture').textContent = eur(totFact);
+  document.getElementById('s-paye').textContent = eur(paye);
+  document.getElementById('s-attente').textContent = eur(attente);
+  document.getElementById('s-depenses').textContent = eur(totDep);
+  document.getElementById('s-recur').textContent = eur(recurAn);
+  document.getElementById('s-benef').textContent = eur(benef);
+
+  // Graphique encaissé par mois
+  const parMois = new Array(12).fill(0);
+  docs.filter(d=>d.type==='facture'&&d.statut==='paye').forEach(d=>{
+    const ref = d.date_paiement || d.created_at; if(ref) parMois[new Date(ref).getMonth()] += (+d.montant||0);
+  });
+  if(chMois) chMois.destroy();
+  chMois = new Chart(document.getElementById('chMois'), {
+    type:'bar', data:{ labels:MOIS, datasets:[{ data:parMois.map(v=>Math.round(v)), backgroundColor:'#1e2127', borderRadius:5 }] },
+    options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{callback:v=>v+' €',font:{size:10}}},x:{ticks:{font:{size:10}},grid:{display:false}}}, responsive:true, maintainAspectRatio:false }
+  });
+
+  // Dépenses par catégorie
+  const cats = {};
+  deps.forEach(d=>{ const c=d.categorie||'Autre'; cats[c]=(cats[c]||0)+(+d.montant||0); });
+  if(chDep) chDep.destroy();
+  chDep = new Chart(document.getElementById('chDep'), {
+    type:'doughnut', data:{ labels:Object.keys(cats), datasets:[{ data:Object.values(cats).map(v=>Math.round(v)), backgroundColor:['#1e2127','#9c8e76','#b06010','#3a5bbf','#2e7d32','#c0392b','#888780','#d3d1c7'], borderWidth:0 }] },
+    options:{ plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:12}}}, responsive:true, maintainAspectRatio:false, cutout:'62%' }
+  });
+
+  // Tableau documents
+  const td = document.getElementById('tblDoc');
+  td.innerHTML = '<tr><th>Date</th><th>Type</th><th>N°</th><th>Client</th><th>Statut</th><th class="r">Montant</th></tr>' +
+    (docs.length ? docs.map(d=>`<tr>
+      <td>${new Date(d.created_at).toLocaleDateString('fr-FR')}</td>
+      <td><span class="tag ${d.type}">${d.type}</span></td>
+      <td>${d.nom||''}</td>
+      <td>${d.chantiers?d.chantiers.client_nom:''}</td>
+      <td>${d.type==='facture'?`<span class="tag ${d.statut==='paye'?'paye':'attente'}">${d.statut==='paye'?'Payé':'En attente'}</span>`:'—'}</td>
+      <td class="r">${eur(+d.montant||0)}</td></tr>`).join('') : '<tr><td colspan="6" style="color:var(--stone)">Aucun document.</td></tr>');
+
+  // Tableau dépenses
+  const tD = document.getElementById('tblDep');
+  tD.innerHTML = '<tr><th>Date</th><th>Libellé</th><th>Catégorie</th><th class="r">HT</th><th class="r">TVA</th><th class="r">TTC</th><th>Récurrence</th><th>Échéance</th><th>Facture</th><th></th></tr>' +
+    (deps.length ? deps.map(d=>`<tr>
+      <td>${d.date?new Date(d.date).toLocaleDateString('fr-FR'):''}</td>
+      <td>${(d.libelle||'')}</td>
+      <td>${d.categorie||''}</td>
+      <td class="r">${d.montant_ht!=null?eur(+d.montant_ht):'—'}</td>
+      <td class="r">${d.tva!=null?eur(+d.tva):'—'}</td>
+      <td class="r">${eur(+(d.montant_ttc!=null?d.montant_ttc:d.montant)||0)}</td>
+      <td>${d.parent_id ? '↻ auto' : (d.recurrence && d.recurrence!=='ponctuel' ? '🔁 '+d.recurrence : '—')}</td>
+      <td>${d.echeance?new Date(d.echeance).toLocaleDateString('fr-FR'):(d.paiement==='comptant'?'Comptant':'—')}</td>
+      <td>${d.fichier_url?`<a href="${d.fichier_url}" target="_blank" title="Voir la facture">📄</a>`:'—'}</td>
+      <td class="r"><button class="mini" onclick="supprimerDep('${d.id}')">Suppr.</button></td></tr>`).join('') : '<tr><td colspan="10" style="color:var(--stone)">Aucune dépense enregistrée.</td></tr>');
+}
+
+function calcTTC(){
+  const ht = parseFloat(document.getElementById('e-ht').value);
+  const tva = parseFloat(document.getElementById('e-tva').value);
+  if (!isNaN(ht)) document.getElementById('e-mont').value = (ht + (isNaN(tva)?0:tva)).toFixed(2);
+}
+
+document.getElementById('expForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const btn = this.querySelector('button[type=submit]');
+  btn.disabled = true; btn.textContent = 'Enregistrement…';
+
+  // 1) Upload de la facture (PDF/photo) dans le stockage
+  let fichierUrl = null;
+  const f = document.getElementById('e-file').files[0];
+  if (f) {
+    const path = 'depenses/' + Date.now() + '_' + f.name.replace(/[^\w.\-]/g,'_');
+    const { error: ue } = await sb.storage.from('documents').upload(path, f, { upsert: true });
+    if (!ue) { const { data: pub } = sb.storage.from('documents').getPublicUrl(path); fichierUrl = pub.publicUrl; }
+  }
+
+  const ht = parseFloat(document.getElementById('e-ht').value);
+  const tva = parseFloat(document.getElementById('e-tva').value);
+  const ttc = parseFloat(document.getElementById('e-mont').value) || 0;
+  const paiement = document.getElementById('e-pay').value;
+  const echeance = paiement === 'echeance' ? (document.getElementById('e-ech').value || null) : null;
+
+  const insertData = {
+    libelle: document.getElementById('e-lib').value,
+    categorie: document.getElementById('e-cat').value,
+    montant: ttc,
+    montant_ht: isNaN(ht) ? null : ht,
+    tva: isNaN(tva) ? null : tva,
+    montant_ttc: ttc,
+    date: document.getElementById('e-date').value || null,
+    recurrence: document.getElementById('e-rec').value,
+    paiement: paiement,
+    echeance: echeance,
+    fichier_url: fichierUrl
+  };
+
+  const { error } = await sb.from('depenses').insert(insertData);
+  btn.disabled = false; btn.textContent = '+ Ajouter la dépense';
+  if (error){
+    alert('Erreur : ' + error.message + '\n\nAvez-vous lancé le SQL des nouvelles colonnes (voir mon message) ?');
+    return;
+  }
+  this.reset();
+  document.getElementById('e-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('e-ech-wrap').style.display = 'none';
+  const { data } = await sb.from('depenses').select('*').order('date',{ascending:false});
+  DEPS = data||[]; rendre();
+});
+
+async function supprimerDep(id){
+  const dep = DEPS.find(d=>d.id===id);
+  const estModele = dep && (dep.recurrence==='mensuel'||dep.recurrence==='annuel') && !dep.parent_id;
+  if(!confirm(estModele ? 'Supprimer cette dépense récurrente ET toutes ses occurrences automatiques ?' : 'Supprimer cette dépense ?')) return;
+  if(estModele){ try{ await sb.from('depenses').delete().eq('parent_id', id); }catch(e){} }
+  await sb.from('depenses').delete().eq('id', id);
+  const { data } = await sb.from('depenses').select('*').order('date',{ascending:false}); DEPS = data||[]; rendre();
+}
+
+// ===== Scanner de facture (OCR gratuit, dans le navigateur) =====
+function toNumberFr(s){
+  s = (''+s).replace(/[^\d,.\-]/g,'').replace(/\s/g,'');
+  if (s.indexOf(',')>-1 && s.indexOf('.')>-1) s = s.replace(/\./g,'').replace(',','.');
+  else s = s.replace(',','.');
+  return parseFloat(s) || 0;
+}
+
+const MOIS_FR = {janvier:'01','février':'02',fevrier:'02',mars:'03',avril:'04',mai:'05',juin:'06',juillet:'07','août':'08',aout:'08',septembre:'09',octobre:'10',novembre:'11','décembre':'12',decembre:'12'};
+
+function analyserFacture(text){
+  const lignes = text.split(/\n/).map(l=>l.trim()).filter(Boolean);
+  const bas = text.toLowerCase();
+  const reDecim = /\d[\d . ]*[.,]\d{2}/g;
+  // Montants suivis de € (avec/sans centimes, séparateur espace/point/insécable)
+  function euroDans(txt){
+    const out = []; let m; const re = /(\d[\d . ]*(?:[.,]\d{1,2})?)\s*€/g;
+    while ((m = re.exec(txt))){ const v = toNumberFr(m[1]); if (v > 0 && v < 1000000) out.push(v); }
+    return out;
+  }
+
+  // --- Date ---
+  let date = '';
+  const dm = text.match(/(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/);
+  if (dm){ let y = dm[3]; if (y.length===2) y = '20'+y; date = y + '-' + dm[2].padStart(2,'0') + '-' + dm[1].padStart(2,'0'); }
+  if (!date){
+    const dt = bas.match(/(\d{1,2})\s+(janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|novembre|décembre|decembre)\s+(\d{4})/);
+    if (dt) date = dt[3] + '-' + (MOIS_FR[dt[2]]||'01') + '-' + dt[1].padStart(2,'0');
+  }
+  if (!date){
+    const iso = text.match(/(20\d{2})[\/.\-](\d{1,2})[\/.\-](\d{1,2})/);
+    if (iso) date = iso[1] + '-' + iso[2].padStart(2,'0') + '-' + iso[3].padStart(2,'0');
+  }
+
+  // --- Montants : HT / TVA / TTC repérés par leurs libellés ---
+  function prochePres(keys){
+    for (const k of keys){
+      let from = 0, idx, best = 0;
+      while ((idx = bas.indexOf(k, from)) > -1){
+        const bout = text.substring(idx, idx + 80); // même ligne OU juste en dessous
+        const vals = euroDans(bout);
+        if (vals.length){ const v = Math.max.apply(null, vals); if (v > best) best = v; }
+        from = idx + k.length;
+      }
+      if (best) return best;
+    }
+    return 0;
+  }
+  const ttc = prochePres(['net à payer','net a payer','montant ttc','total ttc','total t.t.c','total à payer','total a payer','montant à régler','total']);
+  const ht  = prochePres(['total ht','montant ht','total h.t','sous-total','sous total','base ht']);
+  const tva = prochePres(['montant tva','total tva','t.v.a','tva']);
+  let montant = ttc || (ht ? ht + (tva || 0) : 0);
+  if (!montant){ // sinon : le plus gros montant en € de la facture
+    const euros = euroDans(text);
+    if (euros.length) montant = Math.max.apply(null, euros);
+    else { const d = (text.match(reDecim)||[]).map(toNumberFr).filter(x => x > 0 && x < 1000000); if (d.length) montant = Math.max.apply(null, d); }
+  }
+
+  // --- Échéance ---
+  let echeance = '';
+  const idxEch = bas.indexOf('échéance') > -1 ? bas.indexOf('échéance') : bas.indexOf('echeance');
+  if (idxEch > -1){
+    const bout = text.substring(idxEch, idxEch + 40);
+    const e = bout.match(/(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/);
+    if (e){ let y = e[3]; if (y.length===2) y='20'+y; echeance = y + '-' + e[2].padStart(2,'0') + '-' + e[1].padStart(2,'0'); }
+  }
+  const comptant = /comptant|à réception|a reception/.test(bas);
+
+  // --- Fournisseur : première "vraie" ligne en haut ---
+  let fournisseur = '';
+  for (const l of lignes.slice(0, 8)){
+    if (/[a-zA-ZéèàâêîôûçÉÈÀ]{3,}/.test(l) && !/facture|devis|date|n°|www|http|t[ée]l|siret|tva|adresse|client|bon de/i.test(l)){
+      fournisseur = l.replace(/\s{2,}/g,' ').slice(0,45); break;
+    }
+  }
+  return { ht, tva, ttc: montant, date, echeance, comptant, fournisseur };
+}
+
+function chargerImage(src){
+  return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+}
+
+// Convertit le fichier (image OU PDF) en canvas net et agrandi
+async function fichierEnCanvas(file){
+  if (file.type === 'application/pdf' && typeof pdfjsLib !== 'undefined'){
+    try { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js'; } catch(e){}
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+    const page = await pdf.getPage(1);
+    const vp = page.getViewport({ scale: 2.2 });
+    const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+    await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    return c;
+  }
+  const img = await chargerImage(URL.createObjectURL(file));
+  const facteur = Math.max(1, Math.min(2200 / img.width, 2.5)); // agrandit les petites photos
+  const w = Math.round(img.width * facteur), h = Math.round(img.height * facteur);
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  c.getContext('2d').drawImage(img, 0, 0, w, h);
+  return c;
+}
+
+// Noir & blanc + contraste renforcé (améliore beaucoup l'OCR)
+function ameliorer(c){
+  const ctx = c.getContext('2d');
+  const im = ctx.getImageData(0, 0, c.width, c.height); const d = im.data;
+  const contraste = 1.5;
+  for (let i = 0; i < d.length; i += 4){
+    let g = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+    g = (g - 128) * contraste + 128;
+    g = g < 0 ? 0 : g > 255 ? 255 : g;
+    d[i] = d[i+1] = d[i+2] = g;
+  }
+  ctx.putImageData(im, 0, 0);
+  return c;
+}
+
+function fileToBase64(file){
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(file); });
+}
+
+function attacherFichier(file){
+  try { const dt = new DataTransfer(); dt.items.add(file); document.getElementById('e-file').files = dt.files; } catch(e){}
+}
+
+function numIA(v){
+  if (v == null) return null;
+  if (typeof v === 'number') return isFinite(v) ? v : null;
+  let s = String(v).replace(/[^\d,.\-]/g, '');
+  if (s.indexOf(',') > -1 && s.indexOf('.') > -1) s = s.replace(/\./g, '').replace(',', '.');
+  else if (s.indexOf(',') > -1) s = s.replace(',', '.');
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+
+function remplirDepuisIA(d, file){
+  if (d.fournisseur) document.getElementById('e-lib').value = d.fournisseur;
+  if (d.categorie){
+    const sel = document.getElementById('e-cat');
+    for (const o of sel.options){ if (o.value.toLowerCase() === String(d.categorie).toLowerCase()){ sel.value = o.value; break; } }
+  }
+  let ht = numIA(d.montant_ht), tva = numIA(d.tva), ttc = numIA(d.montant_ttc);
+  if (ttc == null && ht != null) ttc = ht + (tva || 0);      // reconstruit le TTC si besoin
+  if (ht == null && ttc != null && tva != null) ht = ttc - tva;
+  if (ht != null) document.getElementById('e-ht').value = ht.toFixed(2);
+  if (tva != null) document.getElementById('e-tva').value = tva.toFixed(2);
+  if (ttc != null) document.getElementById('e-mont').value = ttc.toFixed(2);
+  window.__lastIA = { ht, tva, ttc, brut: d };  // pour diagnostic éventuel
+  if (d.date) document.getElementById('e-date').value = d.date;
+  if (d.echeance){
+    document.getElementById('e-pay').value = 'echeance';
+    document.getElementById('e-ech-wrap').style.display = 'block';
+    document.getElementById('e-ech').value = d.echeance;
+  } else if (d.comptant){
+    document.getElementById('e-pay').value = 'comptant';
+  }
+  if (d.recurrence && ['ponctuel','mensuel','annuel'].includes(d.recurrence)) document.getElementById('e-rec').value = d.recurrence;
+  attacherFichier(file);
+}
+
+// Point d'entrée : essaie l'IA (Gemini) puis, à défaut, l'OCR gratuit local
+async function scannerFacture(file){
+  const st = document.getElementById('scanStatus');
+  st.textContent = '⏳ Analyse de la facture par IA…';
+  try {
+    const b64 = await fileToBase64(file);
+    const { data, error } = await sb.functions.invoke('analyser-facture', { body: { fileBase64: b64, mimeType: file.type } });
+    if (!error && data && !data.error && (data.montant_ttc != null || data.montant_ht != null || data.fournisseur)){
+      remplirDepuisIA(data, file);
+      const ia = window.__lastIA || {};
+      st.textContent = '✅ IA : TTC ' + (ia.ttc != null ? ia.ttc.toFixed(2) + ' €' : '?') + (ia.ht != null ? ' · HT ' + ia.ht.toFixed(2) : '') + ' — vérifiez puis « Ajouter »';
+      document.getElementById('scanFile').value = '';
+      return;
+    }
+  } catch(e){ /* IA indisponible → on bascule sur l'OCR gratuit */ }
+  await scannerOCR(file);
+}
+
+async function scannerOCR(file){
+  const st = document.getElementById('scanStatus');
+  if (typeof Tesseract === 'undefined'){ st.textContent = 'Lecteur indisponible (connexion internet ?)'; return; }
+  st.textContent = '⏳ Lecture (OCR gratuit)…';
+  try{
+    let canvas = await fichierEnCanvas(file);
+    ameliorer(canvas);
+    st.textContent = '⏳ Lecture… 0%';
+    const { data } = await Tesseract.recognize(canvas, 'fra', {
+      logger: m => { if (m.status === 'recognizing text') st.textContent = '⏳ Lecture… ' + Math.round(m.progress*100) + '%'; }
+    });
+    const r = analyserFacture(data.text || '');
+    if (r.fournisseur) document.getElementById('e-lib').value = r.fournisseur;
+    if (r.ht) document.getElementById('e-ht').value = r.ht.toFixed(2);
+    if (r.tva) document.getElementById('e-tva').value = r.tva.toFixed(2);
+    if (r.ttc) document.getElementById('e-mont').value = r.ttc.toFixed(2);
+    if (r.date) document.getElementById('e-date').value = r.date;
+    if (r.echeance){
+      document.getElementById('e-pay').value = 'echeance';
+      document.getElementById('e-ech-wrap').style.display = 'block';
+      document.getElementById('e-ech').value = r.echeance;
+    } else if (r.comptant){
+      document.getElementById('e-pay').value = 'comptant';
+    }
+    // Attache la facture scannée pour qu'elle soit stockée à l'ajout
+    try { const dt = new DataTransfer(); dt.items.add(file); document.getElementById('e-file').files = dt.files; } catch(err){}
+    const trouve = [r.fournisseur && 'fournisseur', r.ttc && 'TTC', r.ht && 'HT', r.tva && 'TVA', r.date && 'date'].filter(Boolean);
+    st.textContent = trouve.length ? ('✅ Détecté : ' + trouve.join(', ') + ' — vérifiez puis « Ajouter »') : '🟡 Peu lisible — complétez à la main';
+  }catch(e){
+    st.textContent = '⚠️ Lecture impossible. Réessayez avec une photo plus nette / à plat.';
+  }
+  document.getElementById('scanFile').value = '';
+}
+
+function exporterExcel(){
+  const an = document.getElementById('anneeSel').value;
+  const { docs, deps } = filtre(an);
+  const wb = XLSX.utils.book_new();
+
+  const totFact = docs.filter(d=>d.type==='facture').reduce((s,d)=>s+(+d.montant||0),0);
+  const paye = docs.filter(d=>d.type==='facture'&&d.statut==='paye').reduce((s,d)=>s+(+d.montant||0),0);
+  const attente = docs.filter(d=>d.type==='facture'&&d.statut==='en-attente').reduce((s,d)=>s+(+d.montant||0),0);
+  const totDevis = docs.filter(d=>d.type==='devis').reduce((s,d)=>s+(+d.montant||0),0);
+  const totDep = deps.reduce((s,d)=>s+(+d.montant||0),0);
+  const resume = [
+    {Indicateur:'Devis émis', 'Montant (€)':totDevis},
+    {Indicateur:'CA facturé', 'Montant (€)':totFact},
+    {Indicateur:'Encaissé (payé)', 'Montant (€)':paye},
+    {Indicateur:'En attente', 'Montant (€)':attente},
+    {Indicateur:'Dépenses', 'Montant (€)':totDep},
+    {Indicateur:'Bénéfice net', 'Montant (€)':paye-totDep}
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resume), 'Résumé');
+
+  const rowsDevis = docs.filter(d=>d.type==='devis').map(d=>({ Date:d.created_at?new Date(d.created_at).toLocaleDateString('fr-FR'):'', Numéro:d.nom, Client:d.chantiers?d.chantiers.client_nom:'', 'Montant (€)':+d.montant||0 }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rowsDevis.length?rowsDevis:[{Info:'Aucun devis'}]), 'Devis');
+
+  const rowsFact = docs.filter(d=>d.type==='facture').map(d=>({ Date:d.created_at?new Date(d.created_at).toLocaleDateString('fr-FR'):'', Numéro:d.nom, Client:d.chantiers?d.chantiers.client_nom:'', Statut:d.statut==='paye'?'Payé':'En attente', Échéance:d.date_echeance?new Date(d.date_echeance).toLocaleDateString('fr-FR'):'', 'Montant (€)':+d.montant||0 }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rowsFact.length?rowsFact:[{Info:'Aucune facture'}]), 'Factures');
+
+  const rowsDep = deps.map(d=>({
+    Date:d.date?new Date(d.date).toLocaleDateString('fr-FR'):'',
+    Libellé:d.libelle, Catégorie:d.categorie,
+    'HT (€)': d.montant_ht!=null? +d.montant_ht : '',
+    'TVA (€)': d.tva!=null? +d.tva : '',
+    'TTC (€)': +(d.montant_ttc!=null?d.montant_ttc:d.montant)||0,
+    Récurrence:d.recurrence||'ponctuel',
+    Échéance: d.echeance?new Date(d.echeance).toLocaleDateString('fr-FR'):(d.paiement==='comptant'?'Comptant':''),
+    Facture: d.fichier_url||''
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rowsDep.length?rowsDep:[{Info:'Aucune dépense'}]), 'Dépenses');
+
+  XLSX.writeFile(wb, 'finances_maison_matiere_' + (an==='all'?'tout':an) + '.xlsx');
+}
+</script>
+</body>
+</html>

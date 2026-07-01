@@ -1,0 +1,135 @@
+﻿<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Galerie de réalisations Maison Matière : béton ciré, enduits décoratifs, plâtrerie et peinture à Nevers et alentours.">
+  <title>Réalisations — Maison Matière · Béton ciré Nevers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    #lightbox{display:none;position:fixed;inset:0;background:rgba(30,33,39,.92);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+    #lightbox.open{display:flex}
+    #lightbox img{max-width:90vw;max-height:80vh;border-radius:12px;object-fit:contain}
+    .lb-close{position:absolute;top:20px;right:28px;font-size:32px;color:#fff;cursor:pointer;background:none;border:none;line-height:1}
+    .lb-cap{font-family:"Space Mono";font-size:12px;letter-spacing:.08em;color:rgba(255,255,255,.7);text-transform:uppercase}
+    .shot[data-img]{cursor:pointer}
+    .shot[data-img]:hover .cap{background:rgba(30,33,39,.75)}
+  </style>
+</head>
+<body>
+
+<header class="nav">
+  <a class="brand" href="index.html"><img class="brand-logo" src="assets/logo.png" alt="Maison Matière — Plâtrerie & finitions" onerror="this.remove()" onload="var w=this.parentNode.querySelector('.brand-wrap');if(w)w.style.display='none'"><span class="brand-wrap">Maison Matière<span class="brand-sub">Plâtrerie &amp; finitions</span></span></a>
+  <button class="burger" aria-label="Menu">≡</button>
+  <nav class="links">
+    <a href="index.html" data-page="index.html">Accueil</a>
+    <a href="services.html" data-page="services.html">Services</a>
+    <a href="realisations.html" data-page="realisations.html">Réalisations</a>
+    <a href="le-direct.html" data-page="le-direct.html">Le Direct</a>
+    <a href="a-propos.html" data-page="a-propos.html">À propos</a>
+    <a href="contact.html" class="cta" data-page="contact.html">Demande de devis</a>
+  </nav>
+</header>
+
+<main>
+<section class="section-plaster">
+  <div class="wrap">
+    <span class="eyebrow">Réalisations</span>
+    <h1 style="margin-top:12px">Nos chantiers.</h1>
+    <div class="swipe"></div>
+    <p class="lead">Avant / après, finitions et matières. Cette galerie se remplira au fil de nos réalisations — remplacez ces emplacements par vos vraies photos.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Avant / Après</span>
+    <h2 style="margin:10px 0 6px">Le pouvoir de la matière.</h2>
+    <p class="lead" style="margin-bottom:24px">Faites glisser le curseur pour révéler la transformation.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" class="ba-grid">
+      <div>
+        <div class="ba" style="background:#cabfae">
+          <div class="ba-ph">Photos avant / après à venir</div>
+          <img class="ba-before" src="assets/avant-1.jpg" alt="Avant" onerror="this.style.display='none'">
+          <img class="ba-after" src="assets/apres-1.jpg" alt="Après" onerror="this.style.display='none'">
+          <span class="ba-lbl l">Avant</span>
+          <span class="ba-lbl r">Après</span>
+          <div class="ba-line"></div>
+          <div class="ba-handle">⇆</div>
+        </div>
+        <p style="font-family:'Space Mono';font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--stone);margin-top:10px">Séjour — béton ciré</p>
+      </div>
+      <div>
+        <div class="ba" style="background:#bfc4c0">
+          <div class="ba-ph">Photos avant / après à venir</div>
+          <img class="ba-before" src="assets/avant-2.jpg" alt="Avant" onerror="this.style.display='none'">
+          <img class="ba-after" src="assets/apres-2.jpg" alt="Après" onerror="this.style.display='none'">
+          <span class="ba-lbl l">Avant</span>
+          <span class="ba-lbl r">Après</span>
+          <div class="ba-line"></div>
+          <div class="ba-handle">⇆</div>
+        </div>
+        <p style="font-family:'Space Mono';font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--stone);margin-top:10px">Salle de bain — enduit à la chaux</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <span class="eyebrow">Galerie</span>
+    <h2 style="margin:10px 0 24px">Nos finitions.</h2>
+    <div class="gallery">
+      <!-- Pour ajouter une vraie photo : remplacez data-img="images/votre-photo.jpg" et ajoutez l'image dans le dossier images/ -->
+      <div class="shot m2" data-img=""><span class="ph">Photo à venir</span><span class="cap">Séjour — béton ciré</span></div>
+      <div class="shot m1" data-img=""><span class="ph">Photo à venir</span><span class="cap">Cuisine — crédence &amp; plan de travail</span></div>
+      <div class="shot m3" data-img=""><span class="ph">Photo à venir</span><span class="cap">Salle de bain — enduit à la chaux</span></div>
+      <div class="shot m4" data-img=""><span class="ph">Photo à venir</span><span class="cap">Cloisons &amp; doublages</span></div>
+      <div class="shot m5" data-img=""><span class="ph">Photo à venir</span><span class="cap">Plafond décaissé — éclairage LED</span></div>
+      <div class="shot m6" data-img=""><span class="ph">Photo à venir</span><span class="cap">Cage d'escalier — peinture</span></div>
+    </div>
+    <p style="color:var(--stone);font-size:14px;margin-top:18px">Astuce : pour chaque chantier, gardez une photo « avant » et une « après » — c'est ce qui parle le plus aux futurs clients.</p>
+    <div class="btnrow">
+      <a class="btn" href="contact.html">Demander un devis</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- Lightbox -->
+<div id="lightbox" role="dialog" aria-modal="true" aria-label="Photo agrandie">
+  <button class="lb-close" aria-label="Fermer">×</button>
+  <img src="" alt="Réalisation Maison Matière">
+  <div class="lb-cap"></div>
+</div>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-in">
+      <div>
+        <div class="fbrand">Maison Matière</div>
+        <p>Plâtrerie &amp; finitions d'exception<br>Nevers (58) et sa région</p>
+      </div>
+      <div>
+        <span class="flbl">Contact</span>
+        <p>06.99.83.56.52<br>maisonmatiere58@gmail.com</p>
+      </div>
+      <div>
+        <span class="flbl">Zone</span>
+        <p>plus de 50 km autour de Nevers</p>
+      </div>
+    </div>
+    <div class="foot-legal">Maison Matière — SARL au capital de 〔10 000 €〕 · SIRET 〔000 000 000 00000〕 · Assurance décennale &amp; RC Pro 〔assureur〕 · © 2026</div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<script src="js/main.js"></script>
+<script src="js/animations.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Votre chantier — Maison Matière</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    *{-webkit-tap-highlight-color:transparent}
+    body{background:var(--plaster)}
+    .topbar{background:rgba(236,232,225,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+    .topbar .brand{font-family:"Space Grotesk";font-weight:600;letter-spacing:.16em;text-transform:uppercase;font-size:14px}
+    .topbar .sub{font-family:"Space Mono";font-size:10px;color:var(--stone);margin-top:3px}
+    .page{max-width:680px;margin:20px auto;padding:0 16px}
+    .hero-client{background:var(--ink);color:#fff;border-radius:20px;padding:28px 24px;margin-bottom:16px}
+    .hero-client h1{color:#fff;font-size:clamp(24px,5vw,36px);margin:8px 0 4px}
+    .hero-client .adresse{font-family:"Space Mono";font-size:11px;color:var(--cream);margin-bottom:20px}
+    .prog-track{background:rgba(255,255,255,.2);border-radius:8px;height:12px;margin-bottom:8px}
+    .prog-fill{height:100%;background:#fff;border-radius:8px;transition:width .8s ease}
+    .prog-label{font-family:"Space Mono";font-size:11px;color:rgba(255,255,255,.75)}
+    .statut-badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 12px;font-family:"Space Mono";font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#fff;margin-bottom:16px}
+    .panel-white{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:12px}
+    .panel-white h3{margin:0 0 14px;font-size:17px}
+    .step-list{display:flex;flex-direction:column}
+    .step-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+    .step-item:last-child{border-bottom:none}
+    .step-dot{width:12px;height:12px;border-radius:50%;background:var(--line);flex:none}
+    .step-dot.done{background:var(--ink)}
+    .step-dot.live{background:var(--ink);animation:pl 2.2s infinite}
+    @keyframes pl{0%{box-shadow:0 0 0 0 rgba(30,33,39,.4)}70%{box-shadow:0 0 0 8px rgba(30,33,39,0)}100%{box-shadow:0 0 0 0 rgba(30,33,39,0)}}
+    .feed-item{border-bottom:1px solid var(--line);padding:16px 0}
+    .feed-item:last-child{border-bottom:none}
+    .feed-meta{font-family:"Space Mono";font-size:10px;color:var(--stone);margin-bottom:6px}
+    .feed-tag{display:inline-block;font-family:"Space Mono";font-size:10px;font-weight:700;text-transform:uppercase;color:#fff;background:var(--sand);border-radius:6px;padding:2px 7px;margin-left:6px}
+    .feed-photo{width:100%;border-radius:12px;margin-top:10px;object-fit:cover;cursor:pointer;max-height:300px}
+    .like-btn{display:inline-flex;align-items:center;gap:8px;background:var(--plaster);border:1px solid var(--line);border-radius:20px;padding:10px 18px;font-family:"Space Mono";font-size:13px;cursor:pointer;margin-top:12px;transition:all .15s;user-select:none}
+    .like-btn:active{transform:scale(.95)}
+    .like-btn.liked{background:var(--ink);color:#fff;border-color:var(--ink)}
+    .cmt-list{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+    .cmt{background:var(--plaster);border-radius:10px;padding:9px 12px;font-size:14px}
+    .cmt b{font-size:13px}
+    .cmt .cmt-d{font-family:"Space Mono";font-size:10px;color:var(--stone);margin-left:6px}
+    .cmt-form{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+    .cmt-form .cmt-name{flex:0 0 90px}
+    .cmt-form .cmt-text{flex:1;min-width:140px}
+    .cmt-form input{font-family:inherit;font-size:14px;border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+    .cmt-form button{background:var(--ink);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-family:"Space Grotesk";font-weight:600;font-size:13px;cursor:pointer}
+    .doc-item{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+    .doc-item:last-child{border-bottom:none}
+    .doc-icon{font-size:28px;flex:none}
+    .doc-nom{font-size:15px;font-weight:600}
+    .doc-meta{font-family:"Space Mono";font-size:11px;color:var(--stone);margin-top:3px}
+    .doc-paye{color:#2e7d32}
+    .doc-attente{color:#e67e22}
+    .btn-tel{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--ink);color:#fff;border-radius:14px;padding:16px;font-family:"Space Grotesk";font-weight:600;font-size:16px;text-decoration:none;margin-top:8px}
+    .not-found{text-align:center;padding:80px 24px}
+    #lightbox{display:none;position:fixed;inset:0;background:rgba(30,33,39,.96);z-index:200;align-items:center;justify-content:center}
+    #lightbox.open{display:flex}
+    #lightbox img{max-width:96vw;max-height:90vh;border-radius:10px;object-fit:contain}
+    #lightbox button{position:absolute;top:16px;right:16px;font-size:36px;color:#fff;background:none;border:none;cursor:pointer;line-height:1;width:44px;height:44px}
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:12px">
+    <img src="assets/logo.png" alt="" style="height:42px;width:auto" onerror="this.remove()">
+    <div>
+      <div class="brand">Maison Matière</div>
+      <div class="sub">Suivi de votre chantier</div>
+    </div>
+  </div>
+  <a href="index.html" style="font-family:'Space Mono';font-size:11px;color:var(--stone)">maisonmatiere.netlify.app</a>
+</div>
+
+<div class="page" id="page">
+  <div style="text-align:center;padding:60px 0;color:var(--stone)">Chargement…</div>
+</div>
+
+<div id="lightbox">
+  <button onclick="document.getElementById('lightbox').classList.remove('open')">×</button>
+  <img id="lbImg" src="" alt="Photo chantier">
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-config.js"></script>
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const token = new URLSearchParams(location.search).get('token');
+
+// Identifiant visiteur unique (stocké en localStorage pour les likes)
+let visitorId = localStorage.getItem('mm_visitor_id');
+if (!visitorId) { visitorId = crypto.randomUUID(); localStorage.setItem('mm_visitor_id', visitorId); }
+
+// Lit photo_url : URL simple OU tableau JSON de plusieurs URLs
+function parsePhotos(v) {
+  if (!v) return [];
+  if (typeof v === 'string' && v.trim().startsWith('[')) {
+    try { const a = JSON.parse(v); return Array.isArray(a) ? a : [v]; } catch (e) { return [v]; }
+  }
+  return [v];
+}
+
+function escapeHtml(s) {
+  return (s == null ? '' : '' + s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function renderCmt(c) {
+  const d = new Date(c.created_at).toLocaleDateString('fr-FR');
+  const nom = c.auteur ? escapeHtml(c.auteur) : 'Vous';
+  return `<div class="cmt"><b>${nom}</b> <span class="cmt-d">${d}</span><div>${escapeHtml(c.contenu)}</div></div>`;
+}
+
+async function commenter(e, updateId, chantierId) {
+  e.preventDefault();
+  const form = e.target;
+  const nom = form.querySelector('.cmt-name').value.trim();
+  const texte = form.querySelector('.cmt-text').value.trim();
+  if (!texte) return;
+  const btn = form.querySelector('button');
+  btn.disabled = true;
+  const { error } = await sb.from('commentaires').insert({
+    chantier_id: chantierId, update_id: updateId, auteur: nom || null, contenu: texte
+  });
+  if (error) {
+    alert("Le commentaire n'a pas pu être envoyé. Réessayez plus tard.");
+    btn.disabled = false;
+    return;
+  }
+  const list = document.getElementById('cmts-' + updateId);
+  if (list) list.insertAdjacentHTML('beforeend', renderCmt({ auteur: nom, contenu: texte, created_at: new Date().toISOString() }));
+  form.reset();
+  btn.disabled = false;
+}
+
+async function charger() {
+  if (!token) { afficherErreur(); return; }
+
+  const { data: chantier } = await sb.from('chantiers').select('*').eq('token', token).single();
+  if (!chantier) { afficherErreur(); return; }
+
+  const { data: updates } = await sb.from('updates').select('*').eq('chantier_id', chantier.id).order('created_at', { ascending: false });
+  const { data: etapes } = await sb.from('etapes').select('*').eq('chantier_id', chantier.id).order('ordre');
+  const { data: documents } = await sb.from('documents').select('*').eq('chantier_id', chantier.id).order('created_at', { ascending: false });
+  const { data: likes } = await sb.from('likes').select('*').eq('chantier_id', chantier.id);
+
+  const mesLikes = new Set((likes || []).filter(l => l.visitor_id === visitorId).map(l => l.update_id));
+  const likesCounts = {};
+  (likes || []).forEach(l => { likesCounts[l.update_id] = (likesCounts[l.update_id] || 0) + 1; });
+
+  // Commentaires (silencieux si la table n'existe pas encore)
+  let commentaires = [];
+  try {
+    const { data: cm } = await sb.from('commentaires').select('*').eq('chantier_id', chantier.id).order('created_at');
+    commentaires = cm || [];
+  } catch (e) { commentaires = []; }
+  const cmtsByUpdate = {};
+  commentaires.forEach(c => { (cmtsByUpdate[c.update_id] = cmtsByUpdate[c.update_id] || []).push(c); });
+  window.__cmtsByUpdate = cmtsByUpdate;
+
+  const prog = chantier.progression;
+
+  let etapesHTML = '';
+  if (!etapes || etapes.length === 0) {
+    etapesHTML = '<p style="color:var(--stone);font-size:14px">Les étapes seront affichées ici.</p>';
+  } else {
+    etapesHTML = etapes.map(e => {
+      const done = e.statut === 'termine';
+      const live = e.statut === 'en-cours';
+      return `<div class="step-item">
+        <span class="step-dot ${done ? 'done' : live ? 'live' : ''}"></span>
+        <span style="font-size:14px;font-weight:${done||live?'600':'400'};color:${e.statut==='a-venir'?'var(--stone)':'var(--ink)'}">
+          ${e.nom}${live ? ' — <span style="color:var(--sand)">en cours</span>' : done ? ' ✓' : ''}
+        </span>
+      </div>`;
+    }).join('');
+  }
+
+  let feedHTML = '';
+  if (!updates || updates.length === 0) {
+    feedHTML = '<p style="color:var(--stone);font-size:14px">Les mises à jour de votre chantier apparaîtront ici.</p>';
+  } else {
+    feedHTML = updates.map(u => `
+      <div class="feed-item">
+        <div class="feed-meta">${new Date(u.created_at).toLocaleDateString('fr-FR')} · ${new Date(u.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}<span class="feed-tag">${u.tag||''}</span></div>
+        <div style="font-size:15px">${u.contenu}</div>
+        ${(() => { const ph = parsePhotos(u.photo_url); if (!ph.length) return ''; if (ph.length === 1) return `<img src="${ph[0]}" class="feed-photo" onclick="ouvrirPhoto('${ph[0]}')" alt="photo chantier">`; return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">${ph.map(url => `<img src="${url}" onclick="ouvrirPhoto('${url}')" alt="photo chantier" style="width:100%;height:140px;object-fit:cover;border-radius:10px;cursor:pointer">`).join('')}</div>`; })()}
+        <button class="like-btn ${mesLikes.has(u.id) ? 'liked' : ''}" id="like-${u.id}" onclick="liker('${u.id}','${chantier.id}')">
+          👍 <span id="lc-${u.id}">${likesCounts[u.id] || 0}</span>
+        </button>
+        <div class="cmt-list" id="cmts-${u.id}">${(cmtsByUpdate[u.id]||[]).map(renderCmt).join('')}</div>
+        <form class="cmt-form" onsubmit="commenter(event,'${u.id}','${chantier.id}')">
+          <input class="cmt-name" placeholder="Prénom" maxlength="40">
+          <input class="cmt-text" placeholder="Écrire un commentaire…" required maxlength="500">
+          <button type="submit">Envoyer</button>
+        </form>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('page').innerHTML = `
+    <div class="hero-client">
+      <span style="font-family:'Space Mono';font-size:11px;color:var(--cream);letter-spacing:.08em;text-transform:uppercase">Votre chantier</span>
+      <h1>${chantier.client_nom}</h1>
+      <div class="adresse">${chantier.adresse || ''}</div>
+      <span class="statut-badge">${chantier.statut}</span>
+      <div class="prog-track"><div class="prog-fill" style="width:${prog}%"></div></div>
+      <div class="prog-label">${prog} % d'avancement</div>
+    </div>
+
+    <div class="panel-white">
+      <h3>Étapes du chantier</h3>
+      <div class="step-list">${etapesHTML}</div>
+    </div>
+
+    <div class="panel-white">
+      <h3>Fil du chantier</h3>
+      ${feedHTML}
+    </div>
+
+    ${documents && documents.length > 0 ? `
+    <div class="panel-white">
+      <h3>Vos documents</h3>
+      ${documents.map(d => `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)">
+          <div style="font-size:22px">${d.type === 'devis' ? '📋' : '🧾'}</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:600">${d.nom}</div>
+            <div style="font-family:'Space Mono';font-size:11px;color:var(--stone)">${d.montant ? d.montant.toFixed(2) + ' €' : ''} · <span style="color:${d.statut === 'paye' ? '#2e7d32' : '#e67e22'}">${d.statut === 'paye' ? '✓ Payé' : 'En attente'}</span></div>
+          </div>
+          ${d.fichier_url ? `<a href="${d.fichier_url}" target="_blank" class="btn ghost" style="font-size:13px;padding:8px 14px">Télécharger</a>` : ''}
+        </div>
+      `).join('')}
+    </div>` : ''}
+
+    <div style="margin-top:24px;margin-bottom:48px">
+      <p style="font-size:14px;color:var(--stone);margin-bottom:12px">Une question sur votre chantier ?</p>
+      <a href="tel:0699835652" class="btn-tel">📞 Appeler Maison Matière</a>
+    </div>
+  `;
+}
+
+async function liker(updateId, chantierId) {
+  const btn = document.getElementById('like-${updateId}');
+  const deja = document.getElementById(`like-${updateId}`).classList.contains('liked');
+  if (deja) return; // on ne peut pas retirer un like
+  document.getElementById(`like-${updateId}`).classList.add('liked');
+  const count = parseInt(document.getElementById(`lc-${updateId}`).textContent) + 1;
+  document.getElementById(`lc-${updateId}`).textContent = count;
+  await sb.from('likes').insert({ chantier_id: chantierId, update_id: updateId, visitor_id: visitorId });
+}
+
+function ouvrirPhoto(url) {
+  document.getElementById('lbImg').src = url;
+  document.getElementById('lightbox').classList.add('open');
+}
+
+function afficherErreur() {
+  document.getElementById('page').innerHTML = `
+    <div class="not-found">
+      <h2>Lien invalide</h2>
+      <p style="color:var(--stone)">Ce lien de suivi n'existe pas ou a expiré.<br>Contactez Maison Matière pour obtenir votre lien.</p>
+      <a href="index.html" class="btn" style="margin-top:20px">Retour au site</a>
+    </div>
+  `;
+}
+
+charger();
+</script>
+</body>
+</html>

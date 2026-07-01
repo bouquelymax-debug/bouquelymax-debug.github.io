@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chantier — Maison Matière</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    body{background:var(--plaster)}
+    .topbar{background:#fff;border-bottom:1px solid var(--line);padding:14px 24px;display:flex;align-items:center;gap:16px}
+    .topbar .brand{font-family:"Space Grotesk";font-weight:600;letter-spacing:.16em;text-transform:uppercase;font-size:15px}
+    .back{font-family:"Space Mono";font-size:11px;color:var(--stone);cursor:pointer}
+    .back:hover{color:var(--ink)}
+    .page{max-width:900px;margin:32px auto;padding:0 24px;display:grid;grid-template-columns:1fr 1.2fr;gap:24px;align-items:start}
+    @media(max-width:700px){.page{grid-template-columns:1fr}}
+    .panel-white{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;margin-bottom:16px}
+    .panel-white h3{margin:0 0 16px}
+    .field{margin-bottom:12px}
+    .feed-item{border-bottom:1px solid var(--line);padding:14px 0}
+    .feed-item:last-child{border-bottom:none}
+    .feed-meta{font-family:"Space Mono";font-size:10px;color:var(--stone);margin-bottom:4px}
+    .feed-tag{font-family:"Space Mono";font-size:10px;font-weight:700;text-transform:uppercase;color:var(--sand);margin-left:8px}
+    .feed-photo{width:100%;border-radius:10px;margin-top:8px;object-fit:cover;max-height:220px}
+    .likes-count{font-family:"Space Mono";font-size:11px;color:var(--stone);margin-top:4px}
+    .del-btn{font-family:"Space Mono";font-size:10px;color:#c0392b;cursor:pointer;border:none;background:none;padding:0;margin-top:4px}
+    input[type=range]{width:100%}
+    .lien-client{background:var(--plaster);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-family:"Space Mono";font-size:11px;word-break:break-all;cursor:pointer;margin-top:8px}
+    .lien-client:hover{background:var(--plaster2)}
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="back" onclick="location.href='dashboard.html'">← Retour</span>
+  <div class="brand">Maison Matière</div>
+  <span id="topNom" style="font-size:14px;color:var(--stone)"></span>
+</div>
+
+<div class="page">
+  <!-- Colonne gauche : infos + ajout mise à jour -->
+  <div>
+    <div class="panel-white">
+      <h3>Informations</h3>
+      <div class="field"><label>Client</label><input id="clientNom" placeholder="Nom du client"></div>
+      <div class="field"><label>Adresse</label><input id="adresse" placeholder="Adresse"></div>
+      <div class="field"><label>E-mail du client (pour les notifications auto)</label><input id="clientEmail" type="email" placeholder="client@email.fr"></div>
+      <div class="field">
+        <label>Avancement : <span id="progLabel">0</span> %</label>
+        <input type="range" id="progression" min="0" max="100" step="5" value="0" oninput="document.getElementById('progLabel').textContent=this.value">
+      </div>
+      <div class="field">
+        <label>Statut</label>
+        <select id="statut">
+          <option value="en cours">En cours</option>
+          <option value="terminé">Terminé</option>
+          <option value="en pause">En pause</option>
+        </select>
+      </div>
+      <button class="btn" onclick="sauvegarder()" style="width:100%">Sauvegarder</button>
+      <button onclick="supprimerChantier()" style="width:100%;margin-top:8px;background:none;border:1px solid #e74c3c;color:#e74c3c;border-radius:10px;padding:10px;font-family:'Space Mono';font-size:12px;cursor:pointer">🗑 Supprimer ce chantier</button>
+    </div>
+
+    <div class="panel-white">
+      <h3>Lien client</h3>
+      <p style="font-size:14px;color:var(--stone);margin:0 0 6px">Partagez ce lien avec votre client — il verra uniquement son chantier.</p>
+      <div class="lien-client" id="lienClient" onclick="copierLien()">Chargement…</div>
+      <button class="btn ghost" onclick="copierLien()" style="margin-top:10px;width:100%">📋 Copier le lien</button>
+    </div>
+
+    <div class="panel-white">
+      <h3>Devis &amp; Factures</h3>
+      <div id="docsList">Chargement…</div>
+      <form id="docForm" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
+        <div class="field">
+          <label>Type</label>
+          <select id="docType">
+            <option value="devis">Devis</option>
+            <option value="facture">Facture</option>
+          </select>
+        </div>
+        <div class="field"><label>Nom (ex. Devis béton ciré)</label><input id="docNom" placeholder="Nom du document" required></div>
+        <div class="field"><label>Montant (€)</label><input id="docMontant" type="number" step="0.01" placeholder="0.00" required></div>
+        <div class="field"><label>Date d'échéance</label><input id="docEcheance" type="date"></div>
+        <div class="field"><label>Fichier PDF (optionnel)</label><input type="file" id="docFichier" accept=".pdf,image/*" style="font-size:14px"></div>
+        <button class="btn" type="submit" style="width:100%">Ajouter le document</button>
+      </form>
+    </div>
+
+    <div class="panel-white">
+      <h3>Ajouter une mise à jour</h3>
+      <form id="updateForm">
+        <div class="field">
+          <label>Tag</label>
+          <select id="tag">
+            <option>Préparation</option>
+            <option>Cloisons</option>
+            <option>Enduits</option>
+            <option>Béton ciré</option>
+            <option>Peinture</option>
+            <option>Livraison</option>
+            <option>Autre</option>
+          </select>
+        </div>
+        <div class="field"><label>Message</label><textarea id="contenu" placeholder="Décrivez l'avancement…" style="min-height:90px;width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;font-family:inherit;font-size:15px"></textarea></div>
+        <div class="field">
+          <label>Photos (optionnel — plusieurs possibles)</label>
+          <input type="file" id="photo" accept="image/*" multiple style="font-size:14px">
+        </div>
+        <div class="field"><label>Votre prénom</label><input id="auteur" placeholder="Guillaume ou Maxence"></div>
+        <button class="btn" type="submit" style="width:100%">Publier la mise à jour</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Colonne droite : étapes + fil du chantier -->
+  <div>
+    <div class="panel-white">
+      <h3>Étapes du chantier</h3>
+      <div id="etapesAdmin">Chargement…</div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <input id="nouvelleEtape" placeholder="Nom de l'étape" style="flex:1;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px">
+        <button class="btn" onclick="ajouterEtape()">+ Ajouter</button>
+      </div>
+    </div>
+
+    <div class="panel-white">
+      <h3>Fil du chantier</h3>
+      <div id="feedAdmin">Chargement…</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="../js/email-config.js"></script>
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const params = new URLSearchParams(location.search);
+const chantierId = params.get('id');
+let chantierToken = '';
+
+// Lit photo_url : URL simple OU tableau JSON de plusieurs URLs
+function parsePhotos(v) {
+  if (!v) return [];
+  if (typeof v === 'string' && v.trim().startsWith('[')) {
+    try { const a = JSON.parse(v); return Array.isArray(a) ? a : [v]; } catch (e) { return [v]; }
+  }
+  return [v];
+}
+
+sb.auth.getSession().then(({ data }) => {
+  if (!data.session) location.href = 'index.html';
+  else if (!chantierId) location.href = 'dashboard.html';
+  else charger();
+});
+
+let chantierData = null;
+async function charger() {
+  const { data } = await sb.from('chantiers').select('*').eq('id', chantierId).single();
+  if (!data) { location.href = 'dashboard.html'; return; }
+  chantierData = data;
+  chantierToken = data.token;
+  document.getElementById('topNom').textContent = data.client_nom;
+  document.getElementById('clientNom').value = data.client_nom;
+  document.getElementById('adresse').value = data.adresse || '';
+  if (document.getElementById('clientEmail')) document.getElementById('clientEmail').value = data.client_email || '';
+  document.getElementById('progression').value = data.progression;
+  document.getElementById('progLabel').textContent = data.progression;
+  document.getElementById('statut').value = data.statut;
+  const lien = `${location.origin.replace('/admin','')}/chantier.html?token=${data.token}`;
+  document.getElementById('lienClient').textContent = lien;
+  chargerFeed();
+  chargerEtapes();
+  chargerDocs();
+}
+
+async function chargerEtapes() {
+  const { data } = await sb.from('etapes').select('*').eq('chantier_id', chantierId).order('ordre');
+  const el = document.getElementById('etapesAdmin');
+  if (!data || data.length === 0) {
+    el.innerHTML = '<p style="color:var(--stone);font-size:14px">Aucune étape. Ajoutez-en ci-dessous.</p>';
+    return;
+  }
+  el.innerHTML = data.map(e => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)">
+      <select onchange="changerStatut('${e.id}', this.value)" style="font-family:inherit;font-size:13px;border:1px solid var(--line);border-radius:8px;padding:4px 8px;background:#fff">
+        <option value="a-venir" ${e.statut==='a-venir'?'selected':''}>À venir</option>
+        <option value="en-cours" ${e.statut==='en-cours'?'selected':''}>En cours</option>
+        <option value="termine" ${e.statut==='termine'?'selected':''}>Terminé</option>
+      </select>
+      <span style="flex:1;font-size:14px;font-weight:${e.statut==='en-cours'?'600':'400'};color:${e.statut==='a-venir'?'var(--stone)':'var(--ink)'}">${e.nom}</span>
+      <button onclick="supprimerEtape('${e.id}')" style="background:none;border:none;color:#c0392b;font-size:18px;cursor:pointer;padding:0">×</button>
+    </div>
+  `).join('');
+}
+
+async function ajouterEtape() {
+  const nom = document.getElementById('nouvelleEtape').value.trim();
+  if (!nom) return;
+  const { data: existantes } = await sb.from('etapes').select('ordre').eq('chantier_id', chantierId).order('ordre', { ascending: false }).limit(1);
+  const ordre = existantes && existantes.length > 0 ? existantes[0].ordre + 1 : 0;
+  await sb.from('etapes').insert({ chantier_id: chantierId, nom, ordre });
+  document.getElementById('nouvelleEtape').value = '';
+  chargerEtapes();
+}
+
+async function changerStatut(id, statut) {
+  await sb.from('etapes').update({ statut }).eq('id', id);
+}
+
+async function chargerDocs() {
+  const { data } = await sb.from('documents').select('*').eq('chantier_id', chantierId).order('created_at', { ascending: false });
+  const el = document.getElementById('docsList');
+  if (!data || data.length === 0) { el.innerHTML = '<p style="color:var(--stone);font-size:14px">Aucun document.</p>'; return; }
+  el.innerHTML = data.map(d => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)">
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600">${d.nom} <span style="font-family:'Space Mono';font-size:10px;color:var(--sand);text-transform:uppercase">${d.type}</span></div>
+        <div style="font-family:'Space Mono';font-size:11px;color:var(--stone);margin-top:2px">${d.montant ? d.montant.toFixed(2) + ' €' : '—'} · Échéance : ${d.date_echeance ? new Date(d.date_echeance).toLocaleDateString('fr-FR') : '—'}</div>
+      </div>
+      <select onchange="changerStatutDoc('${d.id}', this.value)" style="font-family:inherit;font-size:12px;border:1px solid var(--line);border-radius:8px;padding:4px 8px">
+        <option value="en-attente" ${d.statut==='en-attente'?'selected':''}>En attente</option>
+        <option value="paye" ${d.statut==='paye'?'selected':''}>Payé</option>
+      </select>
+      ${d.fichier_url ? `<a href="${d.fichier_url}" target="_blank" style="font-family:'Space Mono';font-size:10px;color:var(--ink)">📄 Voir</a>` : ''}
+      ${(d.type === 'facture' && d.statut === 'en-attente') ? `<button onclick="relancer('${d.id}')" style="font-family:'Space Mono';font-size:10px;border:1px solid var(--sand);color:var(--sand);background:none;border-radius:6px;padding:4px 8px;cursor:pointer">Relancer</button>` : ''}
+      <button onclick="supprimerDoc('${d.id}')" style="background:none;border:none;color:#c0392b;font-size:18px;cursor:pointer;padding:0">×</button>
+    </div>
+  `).join('');
+  window.__docs = data;
+}
+
+async function changerStatutDoc(id, statut) {
+  const update = { statut };
+  if (statut === 'paye') update.date_paiement = new Date().toISOString().split('T')[0];
+  await sb.from('documents').update(update).eq('id', id);
+}
+
+async function relancer(docId) {
+  const doc = (window.__docs || []).find(x => x.id === docId);
+  const email = chantierData && chantierData.client_email;
+  if (!email) { alert("Renseignez d'abord l'e-mail du client (section Informations) et sauvegardez."); return; }
+  if (!window.mmSendEmail) { alert('Service e-mail non disponible.'); return; }
+  const r = await window.mmSendEmail({
+    to_email: email,
+    to_name: chantierData.client_nom,
+    sujet: 'Rappel concernant votre facture — Maison Matière',
+    message: 'Bonjour ' + chantierData.client_nom + ',\n\n'
+      + 'Sauf erreur de notre part, la facture ' + (doc ? doc.nom : '')
+      + (doc && doc.montant ? ' d\'un montant de ' + doc.montant.toFixed(2) + ' €' : '')
+      + ' reste en attente de règlement.\n'
+      + 'Merci de procéder au paiement dès que possible. Si c\'est déjà fait, n\'en tenez pas compte.\n\n'
+      + 'Cordialement,\nMaison Matière — 06 99 83 56 52'
+  });
+  if (r && r.skipped) alert('EmailJS n\'est pas encore configuré (voir js/email-config.js).');
+  else if (r && r.ok) alert('✓ Relance envoyée à ' + email);
+  else alert("La relance n'a pas pu être envoyée.");
+}
+
+async function supprimerDoc(id) {
+  if (!confirm('Supprimer ce document ?')) return;
+  await sb.from('documents').delete().eq('id', id);
+  chargerDocs();
+}
+
+document.getElementById('docForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = this.querySelector('button[type=submit]');
+  btn.textContent = 'Ajout…'; btn.disabled = true;
+
+  let fichierUrl = null;
+  const fichier = document.getElementById('docFichier').files[0];
+  if (fichier) {
+    const path = `${chantierId}/${Date.now()}_${fichier.name}`;
+    const { error } = await sb.storage.from('documents').upload(path, fichier, { upsert: true });
+    if (!error) {
+      const { data: pub } = sb.storage.from('documents').getPublicUrl(path);
+      fichierUrl = pub.publicUrl;
+    }
+  }
+
+  await sb.from('documents').insert({
+    chantier_id: chantierId,
+    type: document.getElementById('docType').value,
+    nom: document.getElementById('docNom').value,
+    montant: parseFloat(document.getElementById('docMontant').value) || null,
+    date_echeance: document.getElementById('docEcheance').value || null,
+    fichier_url: fichierUrl
+  });
+
+  this.reset();
+  chargerDocs();
+  btn.textContent = 'Ajouter le document'; btn.disabled = false;
+});
+
+async function supprimerEtape(id) {
+  if (!confirm('Supprimer cette étape ?')) return;
+  await sb.from('etapes').delete().eq('id', id);
+  chargerEtapes();
+}
+
+async function chargerFeed() {
+  const { data } = await sb.from('updates').select('*').eq('chantier_id', chantierId).order('created_at', { ascending: false });
+  const { data: likes } = await sb.from('likes').select('update_id').eq('chantier_id', chantierId);
+  const likesCounts = {};
+  (likes || []).forEach(l => { likesCounts[l.update_id] = (likesCounts[l.update_id] || 0) + 1; });
+  let commentaires = [];
+  try { const { data: cm } = await sb.from('commentaires').select('*').eq('chantier_id', chantierId).order('created_at'); commentaires = cm || []; } catch (e) {}
+  const cmtsByU = {};
+  commentaires.forEach(c => { (cmtsByU[c.update_id] = cmtsByU[c.update_id] || []).push(c); });
+  const feed = document.getElementById('feedAdmin');
+  if (!data || data.length === 0) { feed.innerHTML = '<p style="color:var(--stone);font-size:14px">Aucune mise à jour pour l\'instant.</p>'; return; }
+  feed.innerHTML = data.map(u => `
+    <div class="feed-item">
+      <div class="feed-meta">${new Date(u.created_at).toLocaleDateString('fr-FR')} · ${new Date(u.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}<span class="feed-tag">${u.tag || ''}</span></div>
+      <div style="font-size:14.5px">${u.contenu}</div>
+      ${parsePhotos(u.photo_url).map(url => `<img src="${url}" class="feed-photo" alt="photo chantier" style="margin-top:6px">`).join('')}
+      <div class="likes-count">👍 ${likesCounts[u.id] || 0} like${(likesCounts[u.id] || 0) > 1 ? 's' : ''} · Par ${u.auteur || 'L\'équipe'}</div>
+      ${(cmtsByU[u.id] || []).map(c => `<div style="background:var(--plaster);border-radius:8px;padding:7px 10px;margin-top:6px;font-size:13px"><b>${(c.auteur||'Client')}</b> <span style="font-family:'Space Mono';font-size:10px;color:var(--stone)">${new Date(c.created_at).toLocaleDateString('fr-FR')}</span><br>${c.contenu} <button class="del-btn" style="margin-left:6px" onclick="supprimerCommentaire('${c.id}')">×</button></div>`).join('')}
+      <button class="del-btn" onclick="supprimerUpdate('${u.id}')">Supprimer la mise à jour</button>
+    </div>
+  `).join('');
+}
+
+async function supprimerUpdate(id) {
+  if (!confirm('Supprimer cette mise à jour ?')) return;
+  try { await sb.from('commentaires').delete().eq('update_id', id); } catch (e) {}
+  await sb.from('updates').delete().eq('id', id);
+  chargerFeed();
+}
+
+async function supprimerCommentaire(id) {
+  if (!confirm('Supprimer ce commentaire ?')) return;
+  try { await sb.from('commentaires').delete().eq('id', id); } catch (e) {}
+  chargerFeed();
+}
+
+async function supprimerChantier() {
+  const nom = document.getElementById('clientNom').value;
+  if (!confirm(`Supprimer le chantier de ${nom} ?\n\nToutes les étapes, mises à jour et documents seront aussi supprimés. Cette action est irréversible.`)) return;
+  if (!confirm(`Dernière confirmation : supprimer définitivement le chantier de ${nom} ?`)) return;
+  try { await sb.from('commentaires').delete().eq('chantier_id', chantierId); } catch (e) {}
+  await sb.from('likes').delete().eq('chantier_id', chantierId);
+  await sb.from('updates').delete().eq('chantier_id', chantierId);
+  await sb.from('etapes').delete().eq('chantier_id', chantierId);
+  await sb.from('documents').delete().eq('chantier_id', chantierId);
+  await sb.from('chantiers').delete().eq('id', chantierId);
+  location.href = 'dashboard.html';
+}
+
+async function sauvegarder() {
+  const nouveauStatut = document.getElementById('statut').value;
+  const ancienStatut = chantierData ? chantierData.statut : null;
+  const email = document.getElementById('clientEmail') ? document.getElementById('clientEmail').value.trim() : '';
+  const maj = {
+    client_nom: document.getElementById('clientNom').value,
+    adresse: document.getElementById('adresse').value,
+    progression: parseInt(document.getElementById('progression').value),
+    statut: nouveauStatut
+  };
+  // Enregistre l'e-mail si la colonne existe (sinon on réessaie sans, pour ne rien casser)
+  let { error } = await sb.from('chantiers').update(Object.assign({ client_email: email || null }, maj)).eq('id', chantierId);
+  if (error) { await sb.from('chantiers').update(maj).eq('id', chantierId); }
+
+  // Demande d'avis Google automatique quand le chantier passe à « terminé »
+  if (nouveauStatut === 'terminé' && ancienStatut !== 'terminé' && email && window.mmSendEmail) {
+    window.mmSendEmail({
+      to_email: email,
+      to_name: maj.client_nom,
+      sujet: 'Votre avis compte pour nous 🙏 — Maison Matière',
+      message: 'Bonjour ' + maj.client_nom + ',\n\n'
+        + 'Merci de nous avoir fait confiance pour votre chantier !\n'
+        + 'Si vous êtes satisfait, un avis Google nous aiderait énormément (2 minutes) :\n'
+        + ((window.MM_EMAIL && window.MM_EMAIL.REVIEW_URL) || '') + '\n\nMerci beaucoup,\nMaison Matière'
+    });
+  }
+  if (chantierData) chantierData.statut = nouveauStatut;
+  alert('Sauvegardé !');
+}
+
+function copierLien() {
+  const lien = `${location.origin.replace('/admin','')}/chantier.html?token=${chantierToken}`;
+  navigator.clipboard.writeText(lien).then(() => alert('Lien copié !\n\n' + lien));
+}
+
+document.getElementById('updateForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = this.querySelector('button[type=submit]');
+  btn.textContent = 'Publication…'; btn.disabled = true;
+
+  let photoUrl = null;
+  const photoFiles = document.getElementById('photo').files;
+  if (photoFiles && photoFiles.length) {
+    const urls = [];
+    for (let i = 0; i < photoFiles.length; i++) {
+      const f = photoFiles[i];
+      const ext = f.name.split('.').pop();
+      const path = `${chantierId}/${Date.now()}_${i}.${ext}`;
+      const { error: upErr } = await sb.storage.from('Photos').upload(path, f, { upsert: true });
+      if (upErr) { console.error('Upload error:', upErr.message); alert('Erreur upload : ' + upErr.message); }
+      else {
+        const { data: pub } = sb.storage.from('Photos').getPublicUrl(path);
+        urls.push(pub.publicUrl);
+      }
+    }
+    // 1 photo => URL simple (compatible avec l'existant) ; plusieurs => JSON
+    if (urls.length === 1) photoUrl = urls[0];
+    else if (urls.length > 1) photoUrl = JSON.stringify(urls);
+  }
+
+  const contenu = document.getElementById('contenu').value;
+  await sb.from('updates').insert({
+    chantier_id: chantierId,
+    contenu: contenu,
+    tag: document.getElementById('tag').value,
+    auteur: document.getElementById('auteur').value,
+    photo_url: photoUrl
+  });
+
+  // Notification e-mail au client (si e-mail renseigné + EmailJS configuré)
+  const emailCli = chantierData && chantierData.client_email;
+  if (emailCli && window.mmSendEmail) {
+    const lien = `${location.origin.replace('/admin','')}/chantier.html?token=${chantierToken}`;
+    window.mmSendEmail({
+      to_email: emailCli,
+      to_name: chantierData.client_nom,
+      sujet: 'Du nouveau sur votre chantier — Maison Matière',
+      message: 'Bonjour ' + chantierData.client_nom + ',\n\n'
+        + 'Une nouvelle mise à jour vient d\'être publiée sur votre chantier :\n"' + contenu + '"\n\n'
+        + 'Suivez l\'avancement en direct ici :\n' + lien + '\n\nMaison Matière'
+    });
+  }
+
+  this.reset();
+  chargerFeed();
+  btn.textContent = 'Publier la mise à jour'; btn.disabled = false;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tableau de bord — Maison Matière</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    body{background:var(--plaster)}
+    *{-webkit-tap-highlight-color:transparent}
+    .topbar{background:#fff;border-bottom:1px solid var(--line);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .topbar .brand{font-family:"Space Grotesk";font-weight:600;letter-spacing:.16em;text-transform:uppercase;font-size:14px}
+    .topbar .sub{font-family:"Space Mono";font-size:11px;color:var(--stone);margin-top:3px}
+    .topbar-actions{display:flex;gap:8px;flex-shrink:0}
+    .page{max-width:900px;margin:24px auto;padding:0 16px}
+    .card-chantier{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+    .card-chantier h3{margin:0 0 4px;font-size:16px}
+    .card-chantier .meta{font-family:"Space Mono";font-size:11px;color:var(--stone)}
+    .progress-bar{height:6px;background:var(--line);border-radius:4px;margin-top:10px;max-width:220px;min-width:100px}
+    .progress-fill{height:100%;background:var(--ink);border-radius:4px;transition:width .3s}
+    .badge-statut{font-family:"Space Mono";font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:20px;background:var(--plaster);color:var(--stone)}
+    .badge-statut.live{background:#e8f5e9;color:#2e7d32}
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(30,33,39,.5);z-index:100;align-items:center;justify-content:center;padding:16px}
+    .modal-bg.open{display:flex}
+    .modal{background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(30,33,39,.15)}
+    .modal h2{margin-bottom:20px}
+    .field{margin-bottom:14px}
+    input[type=range]{width:100%;margin-top:6px}
+    .link-copy{background:var(--plaster);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-family:"Space Mono";font-size:12px;word-break:break-all;margin-top:8px;cursor:pointer}
+    .empty{text-align:center;padding:60px 24px;color:var(--stone)}
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+    .stat-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px}
+    .stat-card .label{font-family:"Space Mono";font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--stone)}
+    .stat-card .value{font-family:"Space Grotesk";font-size:22px;font-weight:700;margin-top:6px}
+    .stat-card.alert{border-color:#e74c3c;background:#fff9f9}
+    .stat-card.alert .value{color:#e74c3c}
+    .stat-card.green .value{color:#2e7d32}
+    .section-title{font-family:"Space Grotesk";font-weight:600;font-size:16px;margin:0 0 12px}
+    @media(max-width:700px){
+      .stats-grid{grid-template-columns:repeat(2,1fr)}
+      #chartsRow{grid-template-columns:1fr}
+      .card-chantier{flex-direction:column;align-items:flex-start}
+      .card-chantier-actions{display:flex;width:100%;gap:8px;margin-top:4px}
+      .card-chantier-actions .btn{flex:1;text-align:center}
+      .progress-bar{max-width:100%;width:100%}
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="brand">Maison Matière</div>
+    <div class="sub">Tableau de bord chantiers</div>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn" onclick="openModal()">+ Nouveau</button>
+    <button class="btn ghost" onclick="location.href='finances.html'">📊 Finances</button>
+    <button class="btn ghost" onclick="location.href='leads.html'">📥 Demandes</button>
+    <button class="btn ghost" onclick="location.href='devis.html'">📋 Devis</button>
+    <button class="btn ghost" onclick="location.href='facture.html'">🧾 Facture</button>
+    <button class="btn ghost" onclick="deconnexion()">Déco.</button>
+  </div>
+</div>
+
+<div class="page">
+  <!-- Stats financières -->
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card"><div class="label">Chantiers en cours</div><div class="value" id="s-encours">—</div></div>
+    <div class="stat-card"><div class="label">Devis envoyés</div><div class="value" id="s-devis">—</div></div>
+    <div class="stat-card green"><div class="label">Factures payées</div><div class="value" id="s-paye">—</div></div>
+    <div class="stat-card alert"><div class="label">Factures impayées</div><div class="value" id="s-impaye">—</div></div>
+  </div>
+
+  <!-- Alertes retard -->
+  <div id="alertesRetard"></div>
+
+  <!-- Graphiques KPI -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px" id="chartsRow">
+    <div class="stat-card" style="padding:20px">
+      <div class="label" style="margin-bottom:12px">Chiffre d'affaires — 6 derniers mois</div>
+      <div style="position:relative;height:220px"><canvas id="chartMensuel"></canvas></div>
+    </div>
+    <div class="stat-card" style="padding:20px">
+      <div class="label" style="margin-bottom:12px">Répartition des chantiers</div>
+      <div style="position:relative;height:220px"><canvas id="chartStatuts"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Liste chantiers -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div class="section-title" style="margin:0">Tous les chantiers</div>
+    <a href="archives.html" style="font-family:'Space Mono';font-size:11px;color:var(--stone)">📁 Archives →</a>
+  </div>
+  <div id="liste"></div>
+</div>
+
+<!-- Modal nouveau chantier -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h2>Nouveau chantier</h2>
+    <form id="newForm">
+      <div class="field"><label>Nom du client</label><input id="clientNom" placeholder="ex. M. Dupont" required></div>
+      <div class="field"><label>Adresse du chantier</label><input id="adresse" placeholder="ex. 12 rue des Lilas, Nevers"></div>
+      <div class="field">
+        <label>Avancement : <span id="progLabel">0</span> %</label>
+        <input type="range" id="progression" min="0" max="100" step="5" value="0" oninput="document.getElementById('progLabel').textContent=this.value">
+      </div>
+      <div style="display:flex;gap:12px;margin-top:20px">
+        <button class="btn" type="submit" style="flex:1">Créer le chantier</button>
+        <button class="btn ghost" type="button" onclick="closeModal()" style="flex:1">Annuler</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="../js/supabase-config.js"></script>
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let chartMensuelInst = null, chartStatutsInst = null;
+
+// Vérifier connexion
+sb.auth.getSession().then(({ data }) => {
+  if (!data.session) location.href = 'index.html';
+  else chargerChantiers();
+});
+
+async function chargerStats() {
+  const { data: chantiers } = await sb.from('chantiers').select('statut');
+  const { data: docs } = await sb.from('documents').select('type, montant, statut, date_echeance, date_paiement, created_at');
+
+  const enCours = (chantiers || []).filter(c => c.statut === 'en cours').length;
+  const devis = (docs || []).filter(d => d.type === 'devis').reduce((s, d) => s + (d.montant || 0), 0);
+  const paye = (docs || []).filter(d => d.type === 'facture' && d.statut === 'paye').reduce((s, d) => s + (d.montant || 0), 0);
+  const impaye = (docs || []).filter(d => d.type === 'facture' && d.statut === 'en-attente').reduce((s, d) => s + (d.montant || 0), 0);
+
+  document.getElementById('s-encours').textContent = enCours;
+  document.getElementById('s-devis').textContent = devis.toLocaleString('fr-FR') + ' €';
+  document.getElementById('s-paye').textContent = paye.toLocaleString('fr-FR') + ' €';
+  document.getElementById('s-impaye').textContent = impaye.toLocaleString('fr-FR') + ' €';
+
+  // Alertes retard
+  const today = new Date();
+  const retards = (docs || []).filter(d => d.type === 'facture' && d.statut === 'en-attente' && d.date_echeance && new Date(d.date_echeance) < today);
+  const alertEl = document.getElementById('alertesRetard');
+  if (retards.length > 0) {
+    alertEl.innerHTML = `<div style="background:#fff3f3;border:1px solid #e74c3c;border-radius:12px;padding:14px 18px;margin-bottom:20px;font-size:14px;color:#c0392b">
+      ⚠️ <strong>${retards.length} facture${retards.length > 1 ? 's' : ''} en retard de paiement</strong> — vérifiez les chantiers concernés.
+    </div>`;
+  } else { alertEl.innerHTML = ''; }
+
+  // Graphique 1 : CA mensuel (6 derniers mois)
+  const mois = [];
+  const montantsMois = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(); d.setMonth(d.getMonth() - i);
+    mois.push(d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }));
+    const total = (docs || []).filter(doc => {
+      if (doc.type !== 'facture' || doc.statut !== 'paye') return false;
+      const ref = doc.date_paiement || doc.created_at;
+      if (!ref) return false;
+      const dd = new Date(ref);
+      return dd.getMonth() === d.getMonth() && dd.getFullYear() === d.getFullYear();
+    }).reduce((s, doc) => s + (doc.montant || 0), 0);
+    montantsMois.push(Math.round(total));
+  }
+  if (chartMensuelInst) chartMensuelInst.destroy();
+  chartMensuelInst = new Chart(document.getElementById('chartMensuel'), {
+    type: 'bar',
+    data: { labels: mois, datasets: [{ data: montantsMois, backgroundColor: '#1e2127', borderRadius: 6, maxBarThickness: 48 }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v + ' €', font: { size: 11 } }, grid: { color: '#ece8e1' } }, x: { ticks: { font: { size: 11 } }, grid: { display: false } } }, responsive: true, maintainAspectRatio: false }
+  });
+
+  // Graphique 2 : répartition statuts chantiers
+  const statusLabels = ['En cours', 'Terminé', 'En pause'];
+  const statusData = [
+    (chantiers || []).filter(c => c.statut === 'en cours').length,
+    (chantiers || []).filter(c => c.statut === 'terminé').length,
+    (chantiers || []).filter(c => c.statut === 'en pause').length,
+  ];
+  if (chartStatutsInst) chartStatutsInst.destroy();
+  chartStatutsInst = new Chart(document.getElementById('chartStatuts'), {
+    type: 'doughnut',
+    data: { labels: statusLabels, datasets: [{ data: statusData, backgroundColor: ['#1e2127', '#b09060', '#ece8e1'], borderWidth: 0 }] },
+    options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } } }, responsive: true, maintainAspectRatio: false, cutout: '65%' }
+  });
+}
+
+async function chargerChantiers() {
+  chargerStats();
+  const { data, error } = await sb.from('chantiers').select('*').order('created_at', { ascending: false });
+  const liste = document.getElementById('liste');
+  if (!data || data.length === 0) {
+    liste.innerHTML = '<div class="empty"><p>Aucun chantier pour l\'instant.</p><p>Cliquez sur "+ Nouveau chantier" pour démarrer.</p></div>';
+    return;
+  }
+  liste.innerHTML = data.map(c => `
+    <div class="card-chantier">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <h3 style="margin:0">${c.client_nom}</h3>
+          <span class="badge-statut ${c.statut === 'en cours' ? 'live' : ''}">${c.statut}</span>
+        </div>
+        <div class="meta" style="margin-top:4px">${c.adresse || 'Adresse non renseignée'} · ${new Date(c.created_at).toLocaleDateString('fr-FR')}</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${c.progression}%"></div></div>
+        <div class="meta" style="margin-top:4px">${c.progression} %</div>
+      </div>
+      <div class="card-chantier-actions" style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <button class="btn" onclick="location.href='chantier.html?id=${c.id}'">Gérer →</button>
+        <div style="font-family:'Space Mono';font-size:10px;color:var(--stone);cursor:pointer;white-space:nowrap" onclick="copierLien('${c.token}')">📋 Lien client</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function copierLien(token) {
+  const url = `${location.origin}/chantier.html?token=${token}`;
+  navigator.clipboard.writeText(url).then(() => alert('Lien copié !\n\n' + url));
+}
+
+function openModal() { document.getElementById('modalBg').classList.add('open'); }
+function closeModal() { document.getElementById('modalBg').classList.remove('open'); }
+
+document.getElementById('newForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = this.querySelector('button[type=submit]');
+  btn.textContent = 'Création…'; btn.disabled = true;
+  const { error } = await sb.from('chantiers').insert({
+    client_nom: document.getElementById('clientNom').value,
+    adresse: document.getElementById('adresse').value,
+    progression: parseInt(document.getElementById('progression').value)
+  });
+  if (error) { alert('Erreur : ' + error.message); }
+  else { closeModal(); chargerChantiers(); this.reset(); }
+  btn.textContent = 'Créer le chantier'; btn.disabled = false;
+});
+
+async function deconnexion() {
+  await sb.auth.signOut();
+  location.href = 'index.html';
+}
+</script>
+</body>
+</html>
