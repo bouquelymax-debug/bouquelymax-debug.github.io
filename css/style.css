@@ -88,9 +88,9 @@ section{padding:104px 0}
 .hero{background:var(--plaster);background-image:radial-gradient(1200px 500px at 85% -10%,rgba(196,173,133,.28),transparent 60%),radial-gradient(circle at 1px 1px,rgba(21,23,27,.04) 1px,transparent 0);background-size:auto,22px 22px;padding:0;border-bottom:1px solid var(--line);position:relative;overflow:hidden}
 .hero-in{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center;max-width:1120px;margin:0 auto;padding:110px 28px 104px}
 .hero h1{margin:18px 0 8px}
-.badge{background:var(--cream);border:1px solid #D8CDB8;border-radius:var(--r-l);padding:26px;box-shadow:var(--shadow-l),inset 0 0 0 6px rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;transform:rotate(1.2deg)}
+.badge{background:var(--cream);border:1px solid #D8CDB8;border-radius:var(--r-l);padding:26px;box-shadow:var(--shadow-l),inset 0 0 0 6px rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center}
 .badge img{width:78%;height:auto}
-@keyframes floaty{0%,100%{transform:rotate(1.2deg) translateY(0)}50%{transform:rotate(1.2deg) translateY(-10px)}}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 .hero .badge{animation:floaty 7s ease-in-out infinite}
 
 /* Hero photo plein écran (auto si assets/hero.jpg) */
