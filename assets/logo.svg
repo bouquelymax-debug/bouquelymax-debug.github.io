@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Maison Matière">
+  <defs>
+    <linearGradient id="mmM" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#CABEA4"/>
+      <stop offset="1" stop-color="#A3967A"/>
+    </linearGradient>
+  </defs>
+  <path d="M25 81 V23 L50 56 L75 23 V81" fill="none" stroke="url(#mmM)" stroke-width="15.5" stroke-linejoin="miter" stroke-linecap="square"/>
+  <path d="M25 81 V23 L50 56 L75 23 V81" fill="none" stroke="#8b7e63" stroke-width="1" stroke-linejoin="miter" stroke-linecap="square" opacity=".4"/>
+</svg>
