@@ -40,7 +40,12 @@ async function envoyerEmail(to_email: string, sujet: string, message: string) {
         template_id: EJS_TEMPLATE,
         user_id: EJS_PUBLIC,
         accessToken: EJS_PRIVATE,
-        template_params: { to_email, sujet, message },
+        // On envoie l'adresse sous plusieurs noms courants pour être compatible
+        // avec n'importe quel réglage « To Email » du modèle EmailJS.
+        template_params: {
+          to_email, email: to_email, user_email: to_email, reply_to: to_email, recipient: to_email,
+          to_name: "Maison Matière", sujet, subject: sujet, message,
+        },
       }),
     });
     if (!res.ok) {
