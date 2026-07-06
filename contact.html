@@ -137,6 +137,22 @@
           + 'À très vite,\nMaison Matière — Plâtrerie & finitions\n06 99 83 56 52'
       });
     }
+    // 3) Notification immédiate à l'artisan (pour ne pas avoir à surveiller l'admin)
+    var artisanEmail = window.MM_EMAIL && window.MM_EMAIL.ARTISAN_EMAIL;
+    if (artisanEmail && window.mmSendEmail) {
+      window.mmSendEmail({
+        to_email: artisanEmail,
+        to_name: 'Maison Matière',
+        sujet: '🔔 Nouvelle demande de devis — ' + (prenom || nom || 'un client'),
+        message: 'Nouvelle demande reçue sur le site :\n\n'
+          + 'Nom : ' + (prenom || '') + ' ' + (nom || '') + '\n'
+          + (email ? ('E-mail : ' + email + '\n') : '')
+          + (tel ? ('Téléphone : ' + tel + '\n') : '')
+          + (types ? ('Projet : ' + types + '\n') : '')
+          + (message ? ('\nMessage :\n"' + message + '"\n') : '')
+          + '\nRetrouvez la demande dans l\'espace admin → Demandes.'
+      });
+    }
   };
 </script>
 </body>

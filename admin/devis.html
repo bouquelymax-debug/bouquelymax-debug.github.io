@@ -113,8 +113,9 @@
   <button onclick="numeroAuto()">N° auto</button>
   <select id="chSelect" style="font-family:inherit;font-size:13px;padding:8px 10px;border-radius:9px;border:none;max-width:170px"><option value="">— Lier à un chantier —</option></select>
   <button class="primary" onclick="envoyerClient()">📤 Envoyer au client</button>
+  <button onclick="versFacture()">→ Transformer en facture</button>
   <button onclick="saveHTML()">Enregistrer le modèle</button>
-  <div class="hint">Cliquez sur un texte pour le modifier. « N° auto » propose le prochain numéro · « Envoyer au client » dépose le devis directement dans son espace de suivi.</div>
+  <div class="hint">Cliquez sur un texte pour le modifier. « N° auto » propose le prochain numéro · « Envoyer au client » dépose le devis directement dans son espace de suivi · « Transformer en facture » reprend les lignes et le client dans une nouvelle facture.</div>
 </div>
 
 <section class="sheet">
@@ -350,6 +351,29 @@ async function envoyerClient() {
   const m = ref.match(/(\d+)\s*$/); const n = m ? parseInt(m[1]) : null;
   if (n) { try { await sbDoc.from('compteurs').upsert({ type: 'devis', annee: annee, dernier: n }); } catch (e) {} }
   alert('✓ Devis déposé dans l\'espace du client !');
+}
+
+function versFacture() {
+  document.activeElement && document.activeElement.blur();
+  const rightBlock = document.querySelector('.parties .right');
+  const clientNom = rightBlock ? (rightBlock.querySelector('.name') || {}).textContent || '' : '';
+  const clientLignes = rightBlock ? Array.from(rightBlock.querySelectorAll('.l')).map(function (el) { return el.textContent || ''; }) : [];
+  const lignes = Array.from(document.querySelectorAll('#lines tr')).map(function (tr) {
+    const designation = (tr.querySelector('td.l > div') || {}).textContent || '';
+    const detail = (tr.querySelector('td.l > small') || {}).textContent || '';
+    const qty = (tr.querySelector('.qty') || {}).textContent || '1';
+    const unitSpan = tr.children[2] ? tr.children[2].querySelector('span') : null;
+    const unit = unitSpan ? unitSpan.textContent : '';
+    const pu = (tr.querySelector('.pu') || {}).textContent || '0';
+    return { designation: designation, detail: detail, qty: qty, unit: unit, pu: pu };
+  });
+  const tvarateEl = document.querySelector('.tvarate');
+  const tvarate = tvarateEl ? tvarateEl.textContent : '';
+  const devisRef = (document.querySelector('.doctype .no span') || {}).textContent || '';
+  const chId = document.getElementById('chSelect').value || '';
+  const payload = { clientNom: clientNom, clientLignes: clientLignes, lignes: lignes, tvarate: tvarate, devisRef: devisRef, chId: chId };
+  try { localStorage.setItem('mm_devis2facture', JSON.stringify(payload)); } catch (e) {}
+  location.href = 'facture.html';
 }
 </script>
 </body>

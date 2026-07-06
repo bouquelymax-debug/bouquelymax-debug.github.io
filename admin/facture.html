@@ -316,7 +316,56 @@ const sbDoc = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   const { data: ch } = await sbDoc.from('chantiers').select('id,client_nom').order('created_at', { ascending: false });
   const sel = document.getElementById('chSelect');
   (ch || []).forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.client_nom; sel.appendChild(o); });
+  preRemplirDepuisDevis(sel);
 })();
+
+// Reprend automatiquement les données d'un devis transformé (bouton « → Transformer en facture »)
+function preRemplirDepuisDevis(sel) {
+  let raw;
+  try { raw = localStorage.getItem('mm_devis2facture'); } catch (e) { raw = null; }
+  if (!raw) return;
+  let d;
+  try { d = JSON.parse(raw); } catch (e) { return; }
+  try { localStorage.removeItem('mm_devis2facture'); } catch (e) {}
+
+  const rightBlock = document.querySelector('.parties .right');
+  if (rightBlock) {
+    if (d.clientNom) { const nameEl = rightBlock.querySelector('.name'); if (nameEl) nameEl.textContent = d.clientNom; }
+    if (d.clientLignes && d.clientLignes.length) {
+      const ls = rightBlock.querySelectorAll('.l');
+      d.clientLignes.forEach(function (v, i) { if (ls[i] && v) ls[i].textContent = v; });
+    }
+  }
+
+  if (d.devisRef) {
+    document.querySelectorAll('.metarow .cell').forEach(function (c) {
+      const k = c.querySelector('.k');
+      if (k && k.textContent.trim() === 'Réf. devis') { const v = c.querySelector('.v'); if (v) v.textContent = d.devisRef; }
+    });
+  }
+
+  if (d.lignes && d.lignes.length) {
+    const tbody = document.getElementById('lines');
+    tbody.innerHTML = '';
+    d.lignes.forEach(function (l) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td class="l"><div contenteditable data-ph="Désignation">' + (l.designation || '') + '</div><small contenteditable data-ph="Détail (optionnel)">' + (l.detail || '') + '</small></td>'
+        + '<td class="num"><span class="qty" contenteditable>' + (l.qty || '1') + '</span></td>'
+        + '<td><span contenteditable>' + (l.unit || '') + '</span></td>'
+        + '<td class="num"><span class="pu" contenteditable>' + (l.pu || '0') + '</span></td>'
+        + '<td class="num total">—</td>'
+        + '<td class="rowctl"><button title="Supprimer" onclick="delRow(this)">×</button></td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  if (d.tvarate) { const el = document.querySelector('.tvarate'); if (el) el.textContent = d.tvarate; }
+  recalc();
+
+  if (d.chId && sel) { sel.value = d.chId; }
+
+  numeroAuto();
+}
 
 async function numeroAuto() {
   const annee = new Date().getFullYear();

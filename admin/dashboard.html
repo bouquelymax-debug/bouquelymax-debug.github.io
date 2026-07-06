@@ -39,6 +39,17 @@
     .stat-card.alert .value{color:#e74c3c}
     .stat-card.green .value{color:#2e7d32}
     .section-title{font-family:"Space Grotesk";font-weight:600;font-size:16px;margin:0 0 12px}
+    .todo-box{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:24px}
+    .todo-box h2{font-family:"Space Grotesk";font-weight:600;font-size:16px;margin:0 0 14px}
+    .todo-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+    .todo-item:last-child{border-bottom:none}
+    .todo-item .btn.ghost{padding:6px 14px;font-size:12px;white-space:nowrap}
+    .todo-empty{color:var(--stone);font-size:13.5px;padding:6px 0}
+    .todo-pill{font-family:"Space Mono";font-size:10px;text-transform:uppercase;padding:3px 9px;border-radius:20px;margin-right:6px}
+    .todo-pill.lead{background:#e8f5e9;color:#2e7d32}
+    .todo-pill.retard{background:#fff3f3;color:#c0392b}
+    .todo-pill.devis{background:#fff8ee;color:#b06010}
+    @media(max-width:700px){.todo-item{flex-direction:column;align-items:flex-start;gap:6px}.todo-item .btn.ghost{align-self:flex-end}}
     @media(max-width:700px){
       .stats-grid{grid-template-columns:repeat(2,1fr)}
       #chartsRow{grid-template-columns:1fr}
@@ -67,6 +78,12 @@
 </div>
 
 <div class="page">
+  <!-- À faire aujourd'hui -->
+  <div class="todo-box">
+    <h2>📋 À faire aujourd'hui</h2>
+    <div id="todoList"><div class="todo-empty">Chargement…</div></div>
+  </div>
+
   <!-- Stats financières -->
   <div class="stats-grid" id="statsGrid">
     <div class="stat-card"><div class="label">Chantiers en cours</div><div class="value" id="s-encours">—</div></div>
@@ -120,6 +137,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="../js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="../js/email-config.js"></script>
 <script>
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let chartMensuelInst = null, chartStatutsInst = null;
@@ -127,8 +146,57 @@ let chartMensuelInst = null, chartStatutsInst = null;
 // Vérifier connexion
 sb.auth.getSession().then(({ data }) => {
   if (!data.session) location.href = 'index.html';
-  else chargerChantiers();
+  else { chargerChantiers(); chargerTodo(); }
 });
+
+async function chargerTodo() {
+  const items = [];
+
+  // 1) Leads non traités
+  let leads = [];
+  try { const { data } = await sb.from('leads').select('*').neq('statut', 'traite'); leads = data || []; } catch (e) {}
+  if (leads.length) {
+    items.push(`<div class="todo-item"><span><span class="todo-pill lead">Nouveau</span><b>${leads.length}</b> demande${leads.length > 1 ? 's' : ''} de devis en attente de traitement</span><a class="btn ghost" href="leads.html">Voir →</a></div>`);
+  }
+
+  // 2) Factures en retard + 3) Devis sans réponse depuis 5 jours
+  const { data: docs } = await sb.from('documents').select('id, type, nom, montant, statut, date_echeance, created_at, chantier_id, chantiers(client_nom, client_email)');
+  const today = new Date();
+
+  const facturesRetard = (docs || []).filter(d => d.type === 'facture' && d.statut === 'en-attente' && d.date_echeance && new Date(d.date_echeance) < today);
+  if (facturesRetard.length) {
+    const total = facturesRetard.reduce((s, d) => s + (+d.montant || 0), 0);
+    items.push(`<div class="todo-item"><span><span class="todo-pill retard">Retard</span><b>${facturesRetard.length}</b> facture${facturesRetard.length > 1 ? 's' : ''} en retard de paiement (${Math.round(total).toLocaleString('fr-FR')} €)</span><a class="btn ghost" href="archives.html">Voir →</a></div>`);
+  }
+
+  const cinqJours = 5 * 86400000;
+  const devisSansReponse = (docs || []).filter(d => d.type === 'devis' && d.statut === 'en-attente' && d.created_at && (today - new Date(d.created_at)) > cinqJours);
+  devisSansReponse.forEach(d => {
+    const ch = d.chantiers || {};
+    const action = ch.client_email
+      ? `<button class="btn ghost" onclick='relancerDevis(${JSON.stringify({ email: ch.client_email, client: ch.client_nom, nom: d.nom })})'>Relancer</button>`
+      : `<a class="btn ghost" href="chantier.html?id=${d.chantier_id}">Voir</a>`;
+    items.push(`<div class="todo-item"><span><span class="todo-pill devis">Devis</span><b>${d.nom || ''}</b> — ${ch.client_nom || ''} sans réponse depuis plus de 5 jours</span>${action}</div>`);
+  });
+
+  document.getElementById('todoList').innerHTML = items.length ? items.join('') : '<div class="todo-empty">Tout est à jour — rien à faire aujourd\'hui 🎉</div>';
+}
+
+async function relancerDevis(d) {
+  if (!window.mmSendEmail) { alert('Service e-mail non disponible.'); return; }
+  const r = await window.mmSendEmail({
+    to_email: d.email,
+    to_name: d.client || '',
+    sujet: 'Toujours intéressé(e) par votre devis ? — Maison Matière',
+    message: 'Bonjour ' + (d.client || '') + ',\n\n'
+      + 'Nous revenons vers vous au sujet du devis ' + (d.nom || '') + ' transmis récemment.\n'
+      + 'Si vous avez des questions ou souhaitez donner suite, n\'hésitez pas à nous contacter.\n\n'
+      + 'Cordialement,\nMaison Matière — 06 99 83 56 52'
+  });
+  if (r && r.ok) alert('✓ Relance envoyée à ' + d.email);
+  else if (r && r.skipped) alert('EmailJS n\'est pas configuré (voir js/email-config.js).');
+  else alert("La relance n'a pas pu être envoyée.");
+}
 
 async function chargerStats() {
   const { data: chantiers } = await sb.from('chantiers').select('statut');

@@ -7,7 +7,8 @@ window.MM_EMAIL = {
   PUBLIC_KEY: '_eZElxudAzQEPqkXt',
   SERVICE_ID: 'service_s1f0gdj',
   TEMPLATE_ID: 'template_2ldl5el',
-  REVIEW_URL: ''                     // lien de votre fiche Google (avis), optionnel
+  REVIEW_URL: '',                    // lien de votre fiche Google (avis), optionnel
+  ARTISAN_EMAIL: 'maisonmatiere58@gmail.com'  // reçoit les notifications internes (nouveau lead, etc.)
 };
 
 // Initialise EmailJS si configuré
