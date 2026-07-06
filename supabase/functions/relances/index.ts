@@ -22,8 +22,15 @@ function json(obj: unknown, status = 200) {
   });
 }
 
+let dernierEmailInfo = "";
 async function envoyerEmail(to_email: string, sujet: string, message: string) {
-  if (!EJS_PUBLIC || !EJS_PRIVATE || !EJS_SERVICE || !EJS_TEMPLATE || !to_email) return false;
+  if (!EJS_PUBLIC || !EJS_PRIVATE || !EJS_SERVICE || !EJS_TEMPLATE || !to_email) {
+    dernierEmailInfo = "Config incomplète — manque: " +
+      [!EJS_PUBLIC && "EMAILJS_PUBLIC", !EJS_PRIVATE && "EMAILJS_PRIVATE",
+       !EJS_SERVICE && "EMAILJS_SERVICE", !EJS_TEMPLATE && "EMAILJS_TEMPLATE",
+       !to_email && "adresse destinataire"].filter(Boolean).join(", ");
+    return false;
+  }
   try {
     const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
       method: "POST",
@@ -36,10 +43,16 @@ async function envoyerEmail(to_email: string, sujet: string, message: string) {
         template_params: { to_email, sujet, message },
       }),
     });
-    if (!res.ok) console.error("EmailJS a répondu:", res.status, await res.text());
+    if (!res.ok) {
+      dernierEmailInfo = "EmailJS a refusé — HTTP " + res.status + " : " + (await res.text());
+      console.error(dernierEmailInfo);
+    } else {
+      dernierEmailInfo = "Envoyé ✅";
+    }
     return res.ok;
   } catch (e) {
-    console.error("Erreur envoi email:", String(e));
+    dernierEmailInfo = "Erreur réseau: " + String(e);
+    console.error(dernierEmailInfo);
     return false;
   }
 }
@@ -122,6 +135,7 @@ Deno.serve(async () => {
 
     // 4) Résumé à l'artisan
     let resumeEnvoye = false;
+    if (!ARTISAN_EMAIL) dernierEmailInfo = "Secret ARTISAN_EMAIL manquant";
     if (ARTISAN_EMAIL) {
       const resume =
         `Bonjour,\n\nRécapitulatif Maison Matière du ${today.toLocaleDateString("fr-FR")} :\n\n` +
@@ -139,6 +153,8 @@ Deno.serve(async () => {
       facturesSansEmailClient: sansEmail,
       nbLeads,
       resumeEnvoye,
+      artisanEmailDefini: !!ARTISAN_EMAIL,
+      detailEmail: dernierEmailInfo,
       emailjsConfigure: !!(EJS_PUBLIC && EJS_PRIVATE && EJS_SERVICE && EJS_TEMPLATE),
     });
   } catch (e) {
