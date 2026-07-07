@@ -47,6 +47,7 @@
 
       <div>
         <!-- Web3Forms — créez un compte gratuit sur web3forms.com et collez votre clé ci-dessous -->
+        <div id="parrainNote" style="display:none;background:#f7f1e4;border:1px solid #d9c9a3;color:#5a4a28;border-radius:12px;padding:12px 15px;margin-bottom:16px;font-size:14px">🎁 Vous avez été <b>recommandé par un client</b> de Maison Matière — bienvenue ! Votre demande sera traitée en priorité.</div>
         <form id="devisForm" class="form" novalidate>
           <input type="hidden" name="access_key" value="a3fef13f-6fe2-4a8d-9838-9c5c98bcf7e6">
           <input type="hidden" name="subject" value="Nouvelle demande de devis — Maison Matière">
@@ -116,13 +117,28 @@
 <script>
   // Centralisation des demandes + accusé de réception automatique
   var _sbLead = (typeof supabase !== 'undefined') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+  // Affiche le bandeau si on arrive via un lien de parrainage
+  (function () {
+    try {
+      var p = new URLSearchParams(location.search).get('parrain');
+      if (p) { var el = document.getElementById('parrainNote'); if (el) el.style.display = 'block'; }
+    } catch (e) {}
+  })();
+
   window.mmOnContactSuccess = async function (form) {
     var get = function (n) { var el = form.querySelector('[name="' + n + '"]'); return el ? el.value.trim() : ''; };
     var types = Array.from(form.querySelectorAll('input[name="type_de_projet[]"]:checked')).map(function (c) { return c.value; }).join(', ');
     var prenom = get('prenom'), nom = get('nom'), email = get('email'), tel = get('telephone'), message = get('message');
+    // Code de parrainage (présent dans l'URL : ?parrain=...)
+    var parrain = '';
+    try { parrain = (new URLSearchParams(location.search).get('parrain') || '').trim(); } catch (e) {}
     // 1) Enregistre la demande dans le tableau de bord (table "leads")
     if (_sbLead) {
-      try { await _sbLead.from('leads').insert({ prenom: prenom, nom: nom, email: email, telephone: tel, types: types, message: message }); } catch (e) {}
+      var lead = { prenom: prenom, nom: nom, email: email, telephone: tel, types: types, message: message };
+      if (parrain) lead.parrain = parrain;
+      // Réessaie sans "parrain" si la colonne n'existe pas encore
+      try { var r = await _sbLead.from('leads').insert(lead); if (r.error && parrain) { delete lead.parrain; await _sbLead.from('leads').insert(lead); } }
+      catch (e) {}
     }
     // 2) Accusé de réception au client (si EmailJS configuré)
     if (email && window.mmSendEmail) {

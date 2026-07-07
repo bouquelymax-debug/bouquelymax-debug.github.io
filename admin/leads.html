@@ -100,7 +100,8 @@ async function charger() {
 async function creerChantier(l) {
   const nom = `${l.prenom||''} ${l.nom||''}`.trim() || 'Nouveau client';
   // Tout ce que la demande contient est repris automatiquement dans le chantier
-  let { data, error } = await sb.from('chantiers').insert({ client_nom: nom, client_email: l.email || null, progression: 0 }).select().single();
+  let { data, error } = await sb.from('chantiers').insert({ client_nom: nom, client_email: l.email || null, parrain: l.parrain || null, progression: 0 }).select().single();
+  if (error) { ({ data, error } = await sb.from('chantiers').insert({ client_nom: nom, client_email: l.email || null, progression: 0 }).select().single()); }
   if (error) { ({ data, error } = await sb.from('chantiers').insert({ client_nom: nom, progression: 0 }).select().single()); }
   if (error) { alert('Erreur : ' + error.message); return; }
   await sb.from('leads').update({ statut: 'traite' }).eq('id', l.id);
