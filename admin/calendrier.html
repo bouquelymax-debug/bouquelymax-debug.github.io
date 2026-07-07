@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calendrier — Maison Matière</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    *{-webkit-tap-highlight-color:transparent}
+    body{background:var(--plaster)}
+    .topbar{background:#fff;border-bottom:1px solid var(--line);padding:14px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .topbar .brand{font-family:"Space Grotesk";font-weight:600;letter-spacing:.16em;text-transform:uppercase;font-size:14px}
+    .topbar .sub{font-family:"Space Mono";font-size:11px;color:var(--stone)}
+    .topbar-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .page{max-width:1020px;margin:24px auto;padding:0 16px}
+
+    /* Barre de navigation du mois */
+    .cal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+    .cal-title{font-family:"Space Grotesk";font-weight:700;font-size:22px;text-transform:capitalize}
+    .cal-nav{display:flex;gap:8px;align-items:center}
+    .cal-nav button{background:#fff;border:1px solid var(--line);border-radius:10px;width:38px;height:38px;font-size:16px;cursor:pointer;color:var(--ink)}
+    .cal-nav button:hover{border-color:var(--sand)}
+    .cal-nav .today{width:auto;padding:0 14px;font-family:"Space Grotesk";font-weight:600;font-size:13px}
+
+    /* Légende */
+    .legende{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;font-size:12px;color:var(--ink2)}
+    .legende span{display:inline-flex;align-items:center;gap:6px}
+    .legende i{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+    /* Grille */
+    .cal-wrap{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+    .cal-dow{font-family:"Space Mono";font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--stone);text-align:center;padding:10px 4px;border-bottom:1.5px solid var(--ink);background:var(--plaster)}
+    .cal-cell{min-height:104px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px;cursor:pointer;position:relative;transition:background .15s}
+    .cal-cell:hover{background:#faf7f1}
+    .cal-cell:nth-child(7n){border-right:none}
+    .cal-cell.hors{background:#f7f5f0;color:var(--stone)}
+    .cal-cell .dnum{font-family:"Space Mono";font-size:11px;color:var(--stone)}
+    .cal-cell.auj .dnum{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-weight:700}
+    .ev{display:block;font-size:10.5px;line-height:1.25;padding:2px 6px;border-radius:5px;margin-top:3px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ev.rdv{background:#3a5bbf}
+    .ev.visite{background:#b06010}
+    .ev.chantier{background:#1e2127}
+    .ev.autre{background:#7c766c}
+    .ev.echeance{background:#fff;color:#c0392b;border:1px dashed #c0392b}
+    .ev-plus{font-family:"Space Mono";font-size:9px;color:var(--stone);margin-top:2px;display:block}
+
+    /* Liste à venir */
+    .avenir{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:16px}
+    .avenir h3{margin:0 0 12px;font-size:16px}
+    .avenir-item{display:flex;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+    .avenir-item:last-child{border-bottom:none}
+    .avenir-item .pastille{width:10px;height:10px;border-radius:3px;flex:none}
+    .avenir-item .quand{font-family:"Space Mono";font-size:11px;color:var(--stone);min-width:120px}
+    .avenir-vide{color:var(--stone);font-size:14px}
+
+    /* Modal */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(30,33,39,.5);z-index:100;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto}
+    .modal-bg.open{display:flex}
+    .modal{background:#fff;border-radius:20px;padding:26px 24px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(30,33,39,.2)}
+    .modal h2{margin:0 0 6px;font-size:20px}
+    .modal .mdate{font-family:"Space Mono";font-size:11px;color:var(--stone);margin-bottom:16px;text-transform:capitalize}
+    .field{margin-bottom:12px}
+    .field label{font-family:"Space Mono";font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--stone);display:block;margin-bottom:5px}
+    .field input,.field select,.field textarea{width:100%;font-family:inherit;font-size:14px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff}
+    .field textarea{min-height:64px;resize:vertical}
+    .grid2f{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .jour-evts{margin-bottom:16px}
+    .jour-evt{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;font-size:13.5px}
+    .jour-evt .pastille{width:10px;height:10px;border-radius:3px;flex:none}
+    .jour-evt .infos{flex:1;min-width:0}
+    .jour-evt .sub{font-family:"Space Mono";font-size:10px;color:var(--stone)}
+    .jour-evt .suppr{border:none;background:none;color:#c0392b;font-size:16px;cursor:pointer;padding:0 4px}
+    .p-rdv{background:#3a5bbf}.p-visite{background:#b06010}.p-chantier{background:#1e2127}.p-autre{background:#7c766c}.p-echeance{background:#c0392b}
+
+    @media(max-width:640px){
+      .cal-cell{min-height:74px;padding:4px}
+      .ev{font-size:9px;padding:1px 4px}
+      .grid2f{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="brand">Maison Matière</div>
+    <div class="sub">Calendrier — chantiers &amp; rendez-vous</div>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn" onclick="ouvrirModal(isoAuj())">+ Nouveau RDV</button>
+    <button class="btn ghost" onclick="location.href='dashboard.html'">← Tableau de bord</button>
+  </div>
+</div>
+
+<div class="page">
+  <div class="cal-head">
+    <div class="cal-title" id="calTitle">—</div>
+    <div class="cal-nav">
+      <button onclick="changerMois(-1)" aria-label="Mois précédent">‹</button>
+      <button class="today" onclick="allerAujourdhui()">Aujourd'hui</button>
+      <button onclick="changerMois(1)" aria-label="Mois suivant">›</button>
+    </div>
+  </div>
+
+  <div class="legende">
+    <span><i style="background:#3a5bbf"></i> RDV client</span>
+    <span><i style="background:#b06010"></i> Visite / devis</span>
+    <span><i style="background:#1e2127"></i> Chantier</span>
+    <span><i style="background:#7c766c"></i> Autre</span>
+    <span><i style="background:#fff;border:1px dashed #c0392b"></i> Échéance facture</span>
+  </div>
+
+  <div class="cal-wrap">
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+
+  <div class="avenir">
+    <h3>📌 À venir (14 prochains jours)</h3>
+    <div id="avenirList" class="avenir-vide">Chargement…</div>
+  </div>
+</div>
+
+<!-- Modal jour / nouveau RDV -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)fermerModal()">
+  <div class="modal">
+    <h2 id="mTitre">Rendez-vous</h2>
+    <div class="mdate" id="mDate"></div>
+
+    <div class="jour-evts" id="mEvts"></div>
+
+    <form id="evForm">
+      <div class="field"><label>Titre *</label><input id="f-titre" placeholder="ex. Visite Mme Lemoine" required></div>
+      <div class="grid2f">
+        <div class="field"><label>Type</label>
+          <select id="f-type">
+            <option value="rdv">RDV client</option>
+            <option value="visite">Visite / devis</option>
+            <option value="chantier">Chantier</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <div class="field"><label>Heure (optionnel)</label><input id="f-heure" type="time"></div>
+      </div>
+      <div class="grid2f">
+        <div class="field"><label>Date</label><input id="f-date" type="date" required></div>
+        <div class="field"><label>Jusqu'au (optionnel)</label><input id="f-datefin" type="date"></div>
+      </div>
+      <div class="field"><label>Lieu (optionnel)</label><input id="f-lieu" placeholder="ex. 8 rue du Cygne, Nevers"></div>
+      <div class="field"><label>Lier à un chantier (optionnel)</label>
+        <select id="f-chantier"><option value="">—</option></select>
+      </div>
+      <div class="field"><label>Notes (optionnel)</label><textarea id="f-notes" placeholder="Infos utiles…"></textarea></div>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn" type="submit" style="flex:1">Enregistrer</button>
+        <button class="btn ghost" type="button" onclick="fermerModal()" style="flex:1">Fermer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const MOIS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const DOW = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+const TYPES_LBL = { rdv:'RDV client', visite:'Visite / devis', chantier:'Chantier', autre:'Autre', echeance:'Échéance facture' };
+
+let annee, mois;           // mois affiché
+let EVTS = [];             // événements (table evenements)
+let ECHEANCES = [];        // échéances de factures (lecture seule)
+let CHANTIERS = [];
+
+sb.auth.getSession().then(({ data }) => {
+  if (!data.session) location.href = 'index.html';
+  else init();
+});
+
+function iso(y, m, d){ return y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0'); }
+function isoAuj(){ const t = new Date(); return iso(t.getFullYear(), t.getMonth(), t.getDate()); }
+function esc(s){ return (s==null?'':''+s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function dateFr(isoStr){ const [y,m,d] = isoStr.split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' }); }
+
+async function init(){
+  const t = new Date();
+  annee = t.getFullYear(); mois = t.getMonth();
+
+  // Chantiers pour le sélecteur du modal
+  const { data: chs } = await sb.from('chantiers').select('id, client_nom').order('created_at', { ascending: false });
+  CHANTIERS = chs || [];
+  const sel = document.getElementById('f-chantier');
+  CHANTIERS.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.client_nom; sel.appendChild(o); });
+
+  await chargerDonnees();
+  rendre();
+}
+
+async function chargerDonnees(){
+  // Événements (table evenements — voir SQL fourni)
+  try {
+    const { data, error } = await sb.from('evenements').select('*').order('date');
+    if (error) throw error;
+    EVTS = data || [];
+    document.getElementById('sqlWarn') && document.getElementById('sqlWarn').remove();
+  } catch (e) {
+    EVTS = [];
+    if (!document.getElementById('sqlWarn')) {
+      document.querySelector('.page').insertAdjacentHTML('afterbegin',
+        '<div id="sqlWarn" style="background:#fff3f3;border:1px solid #e74c3c;border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:13.5px;color:#c0392b">⚠️ La table « evenements » n\'existe pas encore — exécutez le SQL fourni dans Supabase pour activer les rendez-vous.</div>');
+    }
+  }
+  // Échéances de factures en attente (affichage auto, lecture seule)
+  const { data: docs } = await sb.from('documents')
+    .select('nom, montant, date_echeance, chantier_id')
+    .eq('type', 'facture').eq('statut', 'en-attente').not('date_echeance', 'is', null);
+  ECHEANCES = docs || [];
+}
+
+function evtsDuJour(isoStr){
+  const list = [];
+  EVTS.forEach(e => {
+    const debut = e.date, fin = e.date_fin || e.date;
+    if (isoStr >= debut && isoStr <= fin) list.push({ ...e, _cat: e.type || 'rdv' });
+  });
+  ECHEANCES.forEach(d => {
+    if (d.date_echeance === isoStr) {
+      const ch = CHANTIERS.find(c => c.id === d.chantier_id);
+      list.push({ _cat: 'echeance', titre: '€ ' + (d.nom || 'Facture') + (ch ? ' · ' + ch.client_nom : ''), _readonly: true });
+    }
+  });
+  // Heure croissante, chantiers d'abord
+  list.sort((a, b) => (a._cat === 'chantier' ? -1 : 0) - (b._cat === 'chantier' ? -1 : 0) || (a.heure || '99') > (b.heure || '99') ? 1 : -1);
+  return list;
+}
+
+function rendre(){
+  document.getElementById('calTitle').textContent = MOIS[mois] + ' ' + annee;
+  const grid = document.getElementById('calGrid');
+  let html = DOW.map(d => '<div class="cal-dow">' + d + '</div>').join('');
+
+  const premier = new Date(annee, mois, 1);
+  const decal = (premier.getDay() + 6) % 7;            // lundi = 0
+  const nbJours = new Date(annee, mois + 1, 0).getDate();
+  const nbJoursPrec = new Date(annee, mois, 0).getDate();
+  const auj = isoAuj();
+  const totalCells = Math.ceil((decal + nbJours) / 7) * 7;
+
+  for (let i = 0; i < totalCells; i++) {
+    let y = annee, m = mois, d, hors = false;
+    if (i < decal) { d = nbJoursPrec - decal + 1 + i; m = mois - 1; hors = true; }
+    else if (i >= decal + nbJours) { d = i - decal - nbJours + 1; m = mois + 1; hors = true; }
+    else d = i - decal + 1;
+    const dt = new Date(y, m, d);
+    const isoStr = iso(dt.getFullYear(), dt.getMonth(), dt.getDate());
+    const evts = evtsDuJour(isoStr);
+    const visibles = evts.slice(0, 3);
+    const reste = evts.length - visibles.length;
+
+    html += '<div class="cal-cell' + (hors ? ' hors' : '') + (isoStr === auj ? ' auj' : '') + '" onclick="ouvrirModal(\'' + isoStr + '\')">'
+      + '<span class="dnum">' + dt.getDate() + '</span>'
+      + visibles.map(e => '<span class="ev ' + e._cat + '" title="' + esc(e.titre) + '">' + (e.heure ? e.heure.slice(0,5) + ' ' : '') + esc(e.titre) + '</span>').join('')
+      + (reste > 0 ? '<span class="ev-plus">+ ' + reste + ' autre' + (reste > 1 ? 's' : '') + '</span>' : '')
+      + '</div>';
+  }
+  grid.innerHTML = html;
+  rendreAvenir();
+}
+
+function rendreAvenir(){
+  const el = document.getElementById('avenirList');
+  const auj = isoAuj();
+  const limite = new Date(); limite.setDate(limite.getDate() + 14);
+  const limiteIso = iso(limite.getFullYear(), limite.getMonth(), limite.getDate());
+
+  const items = [];
+  EVTS.forEach(e => { if (e.date >= auj && e.date <= limiteIso) items.push({ date: e.date, heure: e.heure, cat: e.type || 'rdv', titre: e.titre, lieu: e.lieu }); });
+  ECHEANCES.forEach(d => {
+    if (d.date_echeance >= auj && d.date_echeance <= limiteIso) {
+      const ch = CHANTIERS.find(c => c.id === d.chantier_id);
+      items.push({ date: d.date_echeance, cat: 'echeance', titre: 'Échéance ' + (d.nom || 'facture') + (ch ? ' — ' + ch.client_nom : '') + (d.montant ? ' (' + Number(d.montant).toFixed(2) + ' €)' : '') });
+    }
+  });
+  items.sort((a, b) => a.date === b.date ? ((a.heure || '99') > (b.heure || '99') ? 1 : -1) : (a.date > b.date ? 1 : -1));
+
+  if (!items.length) { el.className = 'avenir-vide'; el.textContent = 'Rien de prévu sur les 14 prochains jours.'; return; }
+  el.className = '';
+  el.innerHTML = items.map(it => {
+    const [y, m, d] = it.date.split('-').map(Number);
+    const quand = new Date(y, m - 1, d).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }) + (it.heure ? ' · ' + it.heure.slice(0,5) : '');
+    return '<div class="avenir-item"><span class="pastille p-' + it.cat + '"></span><span class="quand">' + quand + '</span><span>' + esc(it.titre) + (it.lieu ? ' <span style="color:var(--stone)">· ' + esc(it.lieu) + '</span>' : '') + '</span></div>';
+  }).join('');
+}
+
+function changerMois(delta){
+  mois += delta;
+  if (mois < 0) { mois = 11; annee--; }
+  if (mois > 11) { mois = 0; annee++; }
+  rendre();
+}
+function allerAujourdhui(){ const t = new Date(); annee = t.getFullYear(); mois = t.getMonth(); rendre(); }
+
+// ---- Modal ----
+function ouvrirModal(isoStr){
+  document.getElementById('mDate').textContent = dateFr(isoStr);
+  document.getElementById('f-date').value = isoStr;
+  document.getElementById('f-datefin').value = '';
+  document.getElementById('evForm').reset();
+  document.getElementById('f-date').value = isoStr;
+
+  // Événements existants ce jour-là
+  const evts = evtsDuJour(isoStr);
+  const box = document.getElementById('mEvts');
+  box.innerHTML = evts.length ? evts.map(e =>
+    '<div class="jour-evt"><span class="pastille p-' + e._cat + '"></span>'
+    + '<div class="infos"><div>' + (e.heure ? '<b>' + e.heure.slice(0,5) + '</b> · ' : '') + esc(e.titre) + '</div>'
+    + '<div class="sub">' + (TYPES_LBL[e._cat] || '') + (e.lieu ? ' · ' + esc(e.lieu) : '') + (e.date_fin && e.date_fin !== e.date ? ' · jusqu\'au ' + e.date_fin.split('-').reverse().join('/') : '') + '</div>'
+    + (e.notes ? '<div class="sub">' + esc(e.notes) + '</div>' : '') + '</div>'
+    + (e._readonly ? '' : '<button class="suppr" title="Supprimer" onclick="supprimerEvt(\'' + e.id + '\')">×</button>')
+    + '</div>').join('') : '';
+
+  document.getElementById('modalBg').classList.add('open');
+}
+function fermerModal(){ document.getElementById('modalBg').classList.remove('open'); }
+
+document.getElementById('evForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const btn = this.querySelector('button[type=submit]');
+  btn.disabled = true; btn.textContent = 'Enregistrement…';
+  const datefin = document.getElementById('f-datefin').value || null;
+  const { error } = await sb.from('evenements').insert({
+    titre: document.getElementById('f-titre').value,
+    type: document.getElementById('f-type').value,
+    date: document.getElementById('f-date').value,
+    date_fin: datefin,
+    heure: document.getElementById('f-heure').value || null,
+    lieu: document.getElementById('f-lieu').value || null,
+    chantier_id: document.getElementById('f-chantier').value || null,
+    notes: document.getElementById('f-notes').value || null
+  });
+  btn.disabled = false; btn.textContent = 'Enregistrer';
+  if (error) { alert('Erreur : ' + error.message + '\n\nAvez-vous exécuté le SQL de la table « evenements » ?'); return; }
+  fermerModal();
+  await chargerDonnees();
+  rendre();
+});
+
+async function supprimerEvt(id){
+  if (!confirm('Supprimer cet événement ?')) return;
+  await sb.from('evenements').delete().eq('id', id);
+  fermerModal();
+  await chargerDonnees();
+  rendre();
+}
+</script>
+</body>
+</html>
