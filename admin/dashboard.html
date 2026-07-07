@@ -79,6 +79,14 @@
 </div>
 
 <div class="page">
+  <!-- RDV du jour -->
+  <div class="todo-box">
+    <h2 style="display:flex;justify-content:space-between;align-items:center">📅 Rendez-vous du jour
+      <a href="calendrier.html" style="font-family:'Space Mono';font-size:11px;color:var(--stone);text-decoration:none">Voir le calendrier →</a>
+    </h2>
+    <div id="rdvJour"><div class="todo-empty">Chargement…</div></div>
+  </div>
+
   <!-- À faire aujourd'hui -->
   <div class="todo-box">
     <h2>📋 À faire aujourd'hui</h2>
@@ -147,8 +155,33 @@ let chartMensuelInst = null, chartStatutsInst = null;
 // Vérifier connexion
 sb.auth.getSession().then(({ data }) => {
   if (!data.session) location.href = 'index.html';
-  else { chargerChantiers(); chargerTodo(); }
+  else { chargerChantiers(); chargerTodo(); chargerRdvJour(); }
 });
+
+const RDV_INIT = { maxence: 'M', guillaume: 'G', deux: 'M·G' };
+const RDV_TYPES = { rdv: 'RDV', visite: 'Visite', chantier: 'Chantier', autre: '' };
+async function chargerRdvJour() {
+  const el = document.getElementById('rdvJour');
+  const auj = new Date().toLocaleDateString('sv-SE'); // AAAA-MM-JJ (local)
+  let evts = [];
+  try {
+    const { data } = await sb.from('evenements').select('*').lte('date', auj);
+    evts = (data || []).filter(e => auj >= e.date && auj <= (e.date_fin || e.date));
+  } catch (e) {
+    el.innerHTML = '<div class="todo-empty">Calendrier non configuré.</div>'; return;
+  }
+  evts.sort((a, b) => (a.heure || '99') > (b.heure || '99') ? 1 : -1);
+  if (!evts.length) { el.innerHTML = '<div class="todo-empty">Aucun rendez-vous aujourd\'hui.</div>'; return; }
+  el.innerHTML = evts.map(e => {
+    const heure = e.heure ? `<b>${e.heure.slice(0,5)}</b>` : '<span style="color:var(--stone)">journée</span>';
+    const qui = e.assigne ? `<span class="todo-pill devis">${RDV_INIT[e.assigne] || ''}</span>` : '';
+    const meta = [RDV_TYPES[e.type] || '', e.lieu].filter(Boolean).join(' · ');
+    return `<div class="todo-item"><span style="display:flex;gap:10px;align-items:center">
+      <span style="font-family:'Space Mono';min-width:52px">${heure}</span>
+      <span>${qui}<b>${(e.titre||'').replace(/</g,'&lt;')}</b>${meta ? ` <span style="color:var(--stone)">— ${meta.replace(/</g,'&lt;')}</span>` : ''}</span>
+    </span><a class="btn ghost" href="calendrier.html">Ouvrir →</a></div>`;
+  }).join('');
+}
 
 async function chargerTodo() {
   const items = [];
