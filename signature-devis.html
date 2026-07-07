@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signature du devis — Maison Matière</title>
+<style>
+  :root{--ink:#15171B;--stone:#8a8578;--line:#e6e2d8;--sand:#A3967A;--green:#2e7d32}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#f3f1ea;color:var(--ink)}
+  .wrap{max-width:760px;margin:0 auto;padding:22px 16px 60px}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  .brand svg{flex:none}
+  .brand b{font-size:17px}.brand small{display:block;color:var(--stone);font-size:11px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px}
+  h1{font-size:19px;margin:0 0 4px}
+  .sub{color:var(--stone);font-size:13.5px;margin-bottom:14px}
+  .pdf{width:100%;height:60vh;min-height:380px;border:1px solid var(--line);border-radius:10px}
+  label{display:block;font-size:13px;font-weight:600;margin:14px 0 6px}
+  input[type=text]{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:9px;font-size:14px}
+  .pad-wrap{position:relative;border:1px dashed var(--sand);border-radius:10px;background:#fbfaf6}
+  canvas{display:block;width:100%;height:180px;touch-action:none;border-radius:10px}
+  .pad-hint{position:absolute;top:50%;left:0;right:0;text-align:center;transform:translateY(-50%);color:#c9c2b2;font-size:14px;pointer-events:none}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+  .btn{padding:13px 20px;border-radius:11px;border:none;font-size:15px;font-weight:600;cursor:pointer}
+  .btn.green{background:var(--green);color:#fff;flex:1;min-width:200px}
+  .btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .ok{text-align:center;padding:30px 16px}
+  .ok .big{font-size:44px}
+  .mont{font-family:monospace;background:#f6f4ec;padding:2px 8px;border-radius:6px}
+  .err{background:#fff3f3;border:1px solid #e0b4b4;color:#b03030;border-radius:10px;padding:12px;font-size:13.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <svg viewBox="0 0 100 100" width="34" height="34" xmlns="http://www.w3.org/2000/svg"><path d="M25 81 V23 L50 56 L75 23 V81" fill="none" stroke="#A3967A" stroke-width="15.5" stroke-linejoin="miter" stroke-linecap="square"/></svg>
+    <div><b>Maison Matière</b><small>Plâtrerie &amp; finitions</small></div>
+  </div>
+
+  <div id="app"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="js/email-config.js"></script>
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const q = new URLSearchParams(location.search);
+const DOC = q.get('doc') || '';
+const REF = q.get('ref') || 'votre devis';
+const NOM = q.get('nom') || '';
+const MONTANT = q.get('montant') || '';
+const PDF = q.get('pdf') || '';
+const app = document.getElementById('app');
+
+if (!DOC || !PDF) {
+  app.innerHTML = '<div class="card"><div class="err">Lien invalide ou incomplet. Demandez à Maison Matière de vous renvoyer votre devis.</div></div>';
+} else {
+  const montantTxt = MONTANT ? ' d\'un montant de <span class="mont">' + Number(MONTANT).toLocaleString('fr-FR', {minimumFractionDigits:2}) + ' € TTC</span>' : '';
+  app.innerHTML =
+    '<div class="card">'
+    + '<h1>Devis ' + esc(REF) + '</h1>'
+    + '<div class="sub">' + (NOM ? 'Bonjour ' + esc(NOM) + ', v' : 'V') + 'oici votre devis' + montantTxt + '. Consultez-le puis signez ci-dessous pour l\'accepter.</div>'
+    + '<iframe class="pdf" src="' + encodeURI(PDF) + '"></iframe>'
+    + '</div>'
+    + '<div class="card">'
+    + '<label>Votre nom (signataire)</label>'
+    + '<input type="text" id="nom" placeholder="Prénom et nom" value="' + esc(NOM) + '">'
+    + '<label>Votre signature</label>'
+    + '<div class="pad-wrap"><canvas id="pad"></canvas><div class="pad-hint" id="padHint">✍️ Signez ici avec le doigt ou la souris</div></div>'
+    + '<div class="row">'
+    + '<button class="btn ghost" onclick="effacer()">Effacer</button>'
+    + '<button class="btn green" id="accepter" onclick="accepter()">✓ J\'accepte et je signe</button>'
+    + '</div>'
+    + '<div id="msg" style="margin-top:10px"></div>'
+    + '</div>';
+  initPad();
+}
+
+function esc(s){ return (s||'').replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
+
+let ctx, dessine = false, vide = true;
+function initPad(){
+  const c = document.getElementById('pad');
+  const ratio = window.devicePixelRatio || 1;
+  const r = c.getBoundingClientRect();
+  c.width = r.width * ratio; c.height = r.height * ratio;
+  ctx = c.getContext('2d'); ctx.scale(ratio, ratio);
+  ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.strokeStyle = '#15171B';
+  const pos = e => { const b = c.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return { x: t.clientX - b.left, y: t.clientY - b.top }; };
+  const start = e => { dessine = true; vide = false; document.getElementById('padHint').style.display = 'none'; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); };
+  const move = e => { if (!dessine) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); };
+  const end = () => { dessine = false; };
+  c.addEventListener('mousedown', start); c.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
+  c.addEventListener('touchstart', start, {passive:false}); c.addEventListener('touchmove', move, {passive:false}); c.addEventListener('touchend', end);
+}
+function effacer(){ const c = document.getElementById('pad'); ctx.clearRect(0,0,c.width,c.height); vide = true; document.getElementById('padHint').style.display = ''; }
+
+async function accepter(){
+  const nom = document.getElementById('nom').value.trim();
+  const msg = document.getElementById('msg');
+  if (!nom) { msg.innerHTML = '<div class="err">Merci d\'indiquer votre nom.</div>'; return; }
+  if (vide) { msg.innerHTML = '<div class="err">Merci de signer dans le cadre.</div>'; return; }
+  const btn = document.getElementById('accepter'); btn.disabled = true; btn.textContent = 'Envoi…';
+  const signature = document.getElementById('pad').toDataURL('image/png');
+
+  const { error } = await sb.from('signatures').insert({ document_id: DOC, signataire: nom, signature: signature });
+  if (error) {
+    btn.disabled = false; btn.textContent = '✓ J\'accepte et je signe';
+    msg.innerHTML = '<div class="err">Erreur : ' + esc(error.message) + '</div>';
+    return;
+  }
+
+  // Notifie l'artisan (best effort)
+  try {
+    const artisan = (window.MM_EMAIL && window.MM_EMAIL.ARTISAN_EMAIL) || '';
+    if (artisan && window.mmSendEmail) {
+      window.mmSendEmail({
+        to_email: artisan, to_name: 'Maison Matière',
+        sujet: '✅ Devis signé — ' + REF + (NOM ? ' (' + NOM + ')' : ''),
+        message: 'Bonne nouvelle : le devis ' + REF + ' vient d\'être accepté et signé en ligne par ' + nom + '.\n\n'
+          + (MONTANT ? 'Montant : ' + Number(MONTANT).toLocaleString('fr-FR') + ' € TTC\n' : '')
+          + 'Le devis est passé en « accepté » dans votre espace.'
+      });
+    }
+  } catch (e) {}
+
+  app.innerHTML = '<div class="card ok"><div class="big">🎉</div><h1>Merci ' + esc(nom) + ' !</h1>'
+    + '<div class="sub">Votre devis ' + esc(REF) + ' est signé et accepté. Nous revenons vers vous très vite pour la suite.</div>'
+    + '<div style="color:var(--stone);font-size:13px">Maison Matière — 06 99 83 56 52</div></div>';
+}
+</script>
+</body>
+</html>

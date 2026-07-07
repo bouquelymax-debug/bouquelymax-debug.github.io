@@ -62,7 +62,7 @@ Deno.serve(async () => {
 
     // Factures du mois (par date de création)
     const { data: docs, error: eDocs } = await sb.from("documents")
-      .select("nom, montant, statut, type, created_at, date_paiement, chantier_id")
+      .select("nom, montant, statut, type, created_at, date_paiement, chantier_id, fichier_url")
       .eq("type", "facture").gte("created_at", debutStr).lt("created_at", finStr);
     if (eDocs) return json({ stage: "documents", error: eDocs.message }, 500);
 
@@ -142,7 +142,16 @@ Deno.serve(async () => {
     let envoyes = 0;
     for (const dest of destinataires) { if (await envoyerEmail(dest, "Export comptable — " + libMois, message)) envoyes++; }
 
-    return json({ ok: true, mois: libMois, nbFactures: (docs ?? []).length, nbDepenses: (deps ?? []).length, lien, emailsEnvoyes: envoyes, detailEmail: dernierEmailInfo });
+    // Liste des PDF de factures du mois (pour sauvegarde automatique sur Google Drive)
+    const facturesPdf = (docs ?? [])
+      .filter((d) => d.fichier_url)
+      .map((d) => ({
+        nom: (d.nom || "facture") + ".pdf",
+        client: chMap[d.chantier_id] || "",
+        url: d.fichier_url as string,
+      }));
+
+    return json({ ok: true, mois: libMois, cle, nbFactures: (docs ?? []).length, nbDepenses: (deps ?? []).length, lien, facturesPdf, emailsEnvoyes: envoyes, detailEmail: dernierEmailInfo });
   } catch (e) {
     return json({ error: String(e) }, 500);
   }

@@ -118,6 +118,16 @@
   <div class="hint">Cliquez sur un texte pour le modifier. « N° auto » propose le prochain numéro · « Envoyer au client » dépose le devis directement dans son espace de suivi · « Transformer en facture » reprend les lignes et le client dans une nouvelle facture.</div>
 </div>
 
+<div id="signBox" style="display:none;background:#eef7ee;border:1px solid #bfe0bf;border-radius:12px;padding:14px 16px;margin:12px auto;max-width:900px;font-family:system-ui,sans-serif">
+  <div style="font-weight:600;margin-bottom:8px">✅ Devis déposé — lien de signature en ligne</div>
+  <div style="font-size:13px;color:#356635;margin-bottom:10px">Envoyez ce lien au client : il consulte le devis et le signe en ligne. Une fois signé, le devis passe automatiquement en « accepté ».</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <input id="signLien" readonly style="flex:1;min-width:240px;padding:9px 11px;border:1px solid #bfe0bf;border-radius:8px;font-size:12px;font-family:monospace">
+    <button id="signCopyBtn" onclick="copierLienSign()" style="padding:9px 14px;border:none;border-radius:8px;background:#2e7d32;color:#fff;cursor:pointer">Copier</button>
+    <button id="signEnvoi" onclick="envoyerLienSign()" style="padding:9px 14px;border:1px solid #2e7d32;border-radius:8px;background:#fff;color:#2e7d32;cursor:pointer">✉ Envoyer au client</button>
+  </div>
+</div>
+
 <section class="sheet">
   <div class="head">
     <div class="logo" style="gap:12px">
@@ -303,6 +313,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="../js/email-config.js"></script>
 <script>
 const sbDoc = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 (async function () {
@@ -345,12 +357,64 @@ async function envoyerClient() {
   const { error: upErr } = await sbDoc.storage.from('documents').upload(path, blob, { upsert: true, contentType: 'application/pdf' });
   if (upErr) { alert('Erreur upload : ' + upErr.message + '\n\n(Vérifiez la politique du bucket « documents » dans Supabase.)'); return; }
   const { data: pub } = sbDoc.storage.from('documents').getPublicUrl(path);
-  const { error: insErr } = await sbDoc.from('documents').insert({ chantier_id: chId, type: 'devis', nom: ref, montant: montant || null, statut: 'en-attente', fichier_url: pub.publicUrl });
+  const { data: ins, error: insErr } = await sbDoc.from('documents')
+    .insert({ chantier_id: chId, type: 'devis', nom: ref, montant: montant || null, statut: 'en-attente', fichier_url: pub.publicUrl })
+    .select('id').single();
   if (insErr) { alert('Erreur enregistrement : ' + insErr.message); return; }
   const annee = new Date().getFullYear();
   const m = ref.match(/(\d+)\s*$/); const n = m ? parseInt(m[1]) : null;
   if (n) { try { await sbDoc.from('compteurs').upsert({ type: 'devis', annee: annee, dernier: n }); } catch (e) {} }
-  alert('✓ Devis déposé dans l\'espace du client !');
+
+  // Lien de signature en ligne
+  let clientNom = '', clientEmail = '';
+  try {
+    const { data: ch } = await sbDoc.from('chantiers').select('client_nom, client_email').eq('id', chId).single();
+    if (ch) { clientNom = ch.client_nom || ''; clientEmail = ch.client_email || ''; }
+  } catch (e) {}
+  const base = location.origin + location.pathname.replace(/\/admin\/.*$/, '');
+  const lien = base + '/signature-devis.html?doc=' + (ins ? ins.id : '')
+    + '&ref=' + encodeURIComponent(ref)
+    + '&nom=' + encodeURIComponent(clientNom)
+    + '&montant=' + encodeURIComponent(montant || '')
+    + '&pdf=' + encodeURIComponent(pub.publicUrl);
+  proposerSignature(lien, clientNom, clientEmail, ref);
+}
+
+function proposerSignature(lien, clientNom, clientEmail, ref) {
+  const box = document.getElementById('signBox');
+  document.getElementById('signLien').value = lien;
+  document.getElementById('signLien').dataset.email = clientEmail || '';
+  document.getElementById('signLien').dataset.nom = clientNom || '';
+  document.getElementById('signLien').dataset.ref = ref || '';
+  document.getElementById('signEnvoi').style.display = clientEmail ? '' : 'none';
+  box.style.display = 'block';
+  box.scrollIntoView({ behavior: 'smooth' });
+}
+
+function copierLienSign() {
+  const inp = document.getElementById('signLien');
+  inp.select(); document.execCommand('copy');
+  navigator.clipboard && navigator.clipboard.writeText(inp.value).catch(function () {});
+  const b = document.getElementById('signCopyBtn'); const t = b.textContent;
+  b.textContent = '✓ Copié'; setTimeout(function () { b.textContent = t; }, 1500);
+}
+
+async function envoyerLienSign() {
+  const inp = document.getElementById('signLien');
+  const email = inp.dataset.email, nom = inp.dataset.nom, ref = inp.dataset.ref;
+  if (!email) { alert('Pas d\'e-mail client sur ce chantier.'); return; }
+  if (!window.mmSendEmail) { alert('Service e-mail indisponible.'); return; }
+  const btn = document.getElementById('signEnvoi'); btn.disabled = true; btn.textContent = 'Envoi…';
+  const r = await window.mmSendEmail({
+    to_email: email, to_name: nom,
+    sujet: 'Votre devis ' + ref + ' — Maison Matière',
+    message: 'Bonjour ' + (nom || '') + ',\n\n'
+      + 'Voici votre devis ' + ref + '. Vous pouvez le consulter et le signer en ligne (2 minutes) ici :\n\n'
+      + inp.value + '\n\n'
+      + 'Nous restons à votre disposition.\nMaison Matière — 06 99 83 56 52'
+  });
+  btn.disabled = false; btn.textContent = '✉ Envoyer au client';
+  alert(r && r.ok !== false ? '✓ E-mail envoyé au client !' : 'Envoi effectué (vérifiez la réception).');
 }
 
 function versFacture() {
