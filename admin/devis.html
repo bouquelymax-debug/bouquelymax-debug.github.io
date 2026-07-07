@@ -15,6 +15,11 @@
   }
   *{box-sizing:border-box}
   .nav{position:static}
+  .fidbox{max-width:900px;margin:12px auto;border-radius:12px;padding:13px 16px;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .fidbox.actif{background:#f7f1e4;border:1px solid #d9c9a3;color:#5a4a28}
+  .fidbox.neutre{background:#f4f2ec;border:1px solid #e2dbcd;color:#7c766c;font-size:13px}
+  .fidbox button{padding:9px 16px;border:none;border-radius:8px;background:#a3967a;color:#fff;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+  .fidbox button:disabled{background:#6f8a5f}
   body{margin:0;background:#DED9D0;font-family:"Hanken Grotesk",system-ui,sans-serif;color:var(--ink);
     -webkit-font-smoothing:antialiased;line-height:1.45;
     background-image:radial-gradient(circle at 1px 1px,rgba(30,33,39,.03) 1px,transparent 0);background-size:22px 22px}
@@ -137,6 +142,8 @@
   <button onclick="saveHTML()">Enregistrer le modèle</button>
   <div class="hint">Choisissez le chantier : le client, le numéro et la date se remplissent tout seuls. Cliquez sur un texte pour l'ajuster si besoin.</div>
 </div>
+
+<div id="fidBox" style="display:none"></div>
 
 <div id="signBox" style="display:none;background:#eef7ee;border:1px solid #bfe0bf;border-radius:12px;padding:14px 16px;margin:12px auto;max-width:900px;font-family:system-ui,sans-serif">
   <div style="font-weight:600;margin-bottom:8px">✅ Devis déposé — lien de signature en ligne</div>
@@ -274,8 +281,21 @@
       var cell=tr.querySelector('.total');
       if(cell) cell.textContent = (q||pu)? fmt(t):'—';
     });
+    // Remise fidélité (sur le HT) — pilotée par window.REMISE_FID (%)
+    var fid=(window.REMISE_FID||0), remise=ht*fid/100, htNet=ht-remise;
+    var remiseRow=document.getElementById('remiseRow');
+    if(fid>0){
+      if(!remiseRow){
+        remiseRow=document.createElement('div');
+        remiseRow.className='row deduct'; remiseRow.id='remiseRow';
+        var grand=document.querySelector('.totals .grand');
+        grand.parentNode.insertBefore(remiseRow, grand);
+      }
+      remiseRow.innerHTML='<span class="lbl">Remise fidélité ('+fid+' %)</span><span class="num">− '+fmt(remise)+'</span>';
+    } else if(remiseRow){ remiseRow.remove(); }
+
     var rate=parseNum(document.querySelector('.tvarate').textContent)/100;
-    var tva=ht*rate, ttc=ht+tva;
+    var tva=htNet*rate, ttc=htNet+tva;
     var acrEl=document.querySelector('.acompterate');
     var acr=acrEl?parseNum(acrEl.textContent)/100:0;
     document.getElementById('tHT').textContent=fmt(ht);
@@ -338,6 +358,25 @@
 <script>
 const sbDoc = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let CH_MAP = {};
+let CH_LIST = [];
+
+// Règle de fidélité : remise selon le nombre de chantiers du client (celui-ci compris)
+function remiseFidelite(n) {
+  if (n >= 4) return { pct: 10, niveau: n };
+  if (n === 3) return { pct: 8, niveau: 3 };
+  if (n === 2) return { pct: 5, niveau: 2 };
+  return { pct: 0, niveau: 1 };
+}
+// Compte les chantiers d'un même client (par e-mail, sinon par nom)
+function compterChantiersClient(c) {
+  if (!c) return 1;
+  const email = (c.client_email || '').trim().toLowerCase();
+  const nom = (c.client_nom || '').trim().toLowerCase();
+  const memeClient = CH_LIST.filter(x =>
+    email ? (x.client_email || '').trim().toLowerCase() === email
+          : (x.client_nom || '').trim().toLowerCase() === nom && nom);
+  return Math.max(1, memeClient.length);
+}
 
 // Épuration : efface les textes d'exemple (les champs affichent alors leur libellé gris)
 (function () {
@@ -364,6 +403,7 @@ let CH_MAP = {};
   const { data } = await sbDoc.auth.getSession();
   if (!data.session) return;
   const { data: ch } = await sbDoc.from('chantiers').select('id,client_nom,adresse,client_email').order('created_at', { ascending: false });
+  CH_LIST = ch || [];
   const sel = document.getElementById('chSelect');
   (ch || []).forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.client_nom; CH_MAP[c.id] = c; sel.appendChild(o); });
   sel.addEventListener('change', remplirClient);
@@ -384,6 +424,35 @@ function remplirClient() {
   if (ls[0]) ls[0].textContent = c.adresse || '';
   if (ls[1]) ls[1].textContent = '';
   if (ls[2]) ls[2].textContent = '';
+  majFidelite(c);
+}
+
+// Affiche le statut fidélité du client et propose d'appliquer la remise
+function majFidelite(c) {
+  const n = compterChantiersClient(c);
+  const { pct, niveau } = remiseFidelite(n);
+  const box = document.getElementById('fidBox');
+  if (!box) return;
+  // On repart d'une remise à zéro à chaque changement de client
+  window.REMISE_FID = 0; recalc();
+  if (pct <= 0) {
+    box.style.display = 'block';
+    box.className = 'fidbox neutre';
+    box.innerHTML = '<b>🪪 Carte de fidélité</b> — 1ᵉʳ chantier de ce client. La remise démarre au 2ᵉ chantier.';
+    return;
+  }
+  box.style.display = 'block';
+  box.className = 'fidbox actif';
+  box.innerHTML = '<div><b>🪪 Client fidèle — ' + niveau + 'ᵉ chantier</b><br>'
+    + '<span style="font-size:12.5px">Remise fidélité de <b>' + pct + ' %</b> applicable sur ce devis.</span></div>'
+    + '<button type="button" id="fidBtn" onclick="appliquerFidelite(' + pct + ')">Appliquer −' + pct + ' %</button>';
+}
+
+function appliquerFidelite(pct) {
+  window.REMISE_FID = pct;
+  recalc();
+  const b = document.getElementById('fidBtn');
+  if (b) { b.textContent = '✓ Remise appliquée'; b.disabled = true; }
 }
 
 async function numeroAuto() {

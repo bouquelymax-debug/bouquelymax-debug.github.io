@@ -85,6 +85,11 @@
       <button class="btn ghost" onclick="copierLien()" style="margin-top:10px;width:100%">📋 Copier le lien</button>
     </div>
 
+    <div class="panel-white" id="fidPanel" style="display:none">
+      <h3>🪪 Carte de fidélité</h3>
+      <div id="fidContenu"></div>
+    </div>
+
     <div class="panel-white">
       <h3>Devis &amp; Factures</h3>
       <div id="docsList">Chargement…</div>
@@ -193,6 +198,48 @@ async function charger() {
   chargerFeed();
   chargerEtapes();
   chargerDocs();
+  chargerFidelite();
+}
+
+// Carte de fidélité : compte les chantiers du même client (par e-mail, sinon par nom)
+function remiseFidelite(n) {
+  if (n >= 4) return 10;
+  if (n === 3) return 8;
+  if (n === 2) return 5;
+  return 0;
+}
+async function chargerFidelite() {
+  if (!chantierData) return;
+  const email = (chantierData.client_email || '').trim();
+  const nom = (chantierData.client_nom || '').trim();
+  let q = sb.from('chantiers').select('id', { count: 'exact', head: true });
+  q = email ? q.ilike('client_email', email) : q.ilike('client_nom', nom);
+  const { count } = await q;
+  const n = Math.max(1, count || 1);
+  const pct = remiseFidelite(n);
+  const prochain = n < 2 ? 5 : n < 3 ? 8 : n < 4 ? 10 : 10;
+
+  // Tampons : 4 cases (au-delà, on affiche « + »)
+  const total = 4;
+  let tampons = '';
+  for (let i = 1; i <= total; i++) {
+    const rempli = i <= n;
+    tampons += '<div style="flex:1;aspect-ratio:1;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;'
+      + (rempli ? 'background:linear-gradient(135deg,#8a7a5c,#c2ad85);color:#fff' : 'background:#f4f2ec;border:1.5px dashed #d9c9a3;color:#c9bfa8')
+      + '">' + (rempli ? '🏠' : (i === n + 1 ? '★' : '')) + '</div>';
+  }
+
+  const el = document.getElementById('fidContenu');
+  el.innerHTML =
+    '<div style="display:flex;gap:8px;margin-bottom:12px">' + tampons + '</div>'
+    + '<div style="font-size:14px">Client au <b>' + n + 'ᵉ chantier</b>'
+    + (pct > 0
+        ? ' — remise fidélité <b style="color:#8a7a5c">' + pct + ' %</b> sur ses devis.'
+        : '. La remise démarre au 2ᵉ chantier (−5 %).')
+    + '</div>'
+    + (n < 4 ? '<div style="font-size:12.5px;color:var(--stone);margin-top:6px">Prochain palier au ' + (n + 1) + 'ᵉ chantier : −' + prochain + ' %.</div>' : '')
+    + '<div style="font-size:12px;color:var(--stone);margin-top:10px">Appliquée automatiquement quand vous créez un devis pour ce client.</div>';
+  document.getElementById('fidPanel').style.display = 'block';
 }
 
 async function chargerEtapes() {
