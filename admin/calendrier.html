@@ -197,7 +197,7 @@ const INIT = { maxence:'M', guillaume:'G', deux:'M·G' };
 let FILTRE = '';           // '', 'maxence' ou 'guillaume'
 
 function passeFiltre(e){
-  if (e._cat === 'echeance') return true;      // les échéances s'affichent toujours
+  if (e._cat === 'echeance' || e._cat === 'chantier') return true;   // échéances et chantiers s'affichent toujours
   if (!FILTRE) return true;
   return e.assigne === FILTRE || e.assigne === 'deux';
 }
@@ -222,7 +222,7 @@ async function init(){
   annee = t.getFullYear(); mois = t.getMonth();
 
   // Chantiers pour le sélecteur du modal
-  const { data: chs } = await sb.from('chantiers').select('id, client_nom').order('created_at', { ascending: false });
+  const { data: chs } = await sb.from('chantiers').select('id, client_nom, adresse, date_debut, date_fin, statut').order('created_at', { ascending: false });
   CHANTIERS = chs || [];
   const sel = document.getElementById('f-chantier');
   CHANTIERS.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.client_nom; sel.appendChild(o); });
@@ -257,6 +257,14 @@ function evtsDuJour(isoStr){
   EVTS.forEach(e => {
     const debut = e.date, fin = e.date_fin || e.date;
     if (isoStr >= debut && isoStr <= fin) list.push({ ...e, _cat: e.type || 'rdv' });
+  });
+  // Chantiers : période automatique (début → fin prévue), lecture seule
+  CHANTIERS.forEach(c => {
+    if (!c.date_debut) return;
+    const fin = c.date_fin || c.date_debut;
+    if (isoStr >= c.date_debut && isoStr <= fin) {
+      list.push({ _cat: 'chantier', titre: '🏠 ' + (c.client_nom || 'Chantier'), lieu: c.adresse, chantier_id: c.id, _readonly: true, _chantier: true });
+    }
   });
   ECHEANCES.forEach(d => {
     if (d.date_echeance === isoStr) {
@@ -310,6 +318,11 @@ function rendreAvenir(){
 
   const items = [];
   EVTS.forEach(e => { if (e.date >= auj && e.date <= limiteIso && (!FILTRE || e.assigne === FILTRE || e.assigne === 'deux')) items.push({ date: e.date, heure: e.heure, cat: e.type || 'rdv', titre: e.titre, lieu: e.lieu, assigne: e.assigne }); });
+  CHANTIERS.forEach(c => {
+    if (c.date_debut && c.date_debut >= auj && c.date_debut <= limiteIso) {
+      items.push({ date: c.date_debut, cat: 'chantier', titre: 'Début chantier — ' + (c.client_nom || ''), lieu: c.adresse });
+    }
+  });
   ECHEANCES.forEach(d => {
     if (d.date_echeance >= auj && d.date_echeance <= limiteIso) {
       const ch = CHANTIERS.find(c => c.id === d.chantier_id);

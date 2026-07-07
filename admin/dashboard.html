@@ -171,18 +171,30 @@ async function chargerRdvJour() {
     el.innerHTML = '<div class="todo-empty">Calendrier non configuré.</div>'; return;
   }
   evts.sort((a, b) => (a.heure || '99') > (b.heure || '99') ? 1 : -1);
-  if (!evts.length) { el.innerHTML = '<div class="todo-empty">Aucun rendez-vous aujourd\'hui.</div>'; return; }
 
-  // Chantiers rattachés (pour afficher le client + lien vers la fiche)
+  // Chantiers : ceux rattachés aux RDV + ceux actifs aujourd'hui (période automatique)
   const chMap = {};
-  const ids = [...new Set(evts.map(e => e.chantier_id).filter(Boolean))];
-  if (ids.length) {
-    const { data: chs } = await sb.from('chantiers').select('id, client_nom, adresse').in('id', ids);
-    (chs || []).forEach(c => chMap[c.id] = c);
-  }
-
+  let allCh = [];
+  try {
+    const { data } = await sb.from('chantiers').select('id, client_nom, adresse, date_debut, date_fin');
+    allCh = data || [];
+  } catch (e) { allCh = []; }
+  allCh.forEach(c => chMap[c.id] = c);
   const esc = s => (s || '').replace(/</g, '&lt;');
-  el.innerHTML = evts.map(e => {
+
+  // Chantiers en cours aujourd'hui affichés comme lignes dédiées
+  const chantiersJour = (allCh || []).filter(c => c.date_debut && auj >= c.date_debut && auj <= (c.date_fin || c.date_debut));
+  const lignesChantier = chantiersJour.map(c => {
+    const debut = auj === c.date_debut ? ' <span class="todo-pill lead">Début</span>' : '';
+    return `<div class="todo-item"><span style="display:flex;gap:10px;align-items:center">
+      <span style="font-family:'Space Mono';min-width:52px">🏠</span>
+      <span><span class="todo-pill devis">G</span><b>Chantier — ${esc(c.client_nom)}</b>${debut}${c.adresse ? ` <span style="color:var(--stone)">— ${esc(c.adresse)}</span>` : ''}</span>
+    </span><a class="btn ghost" href="chantier.html?id=${c.id}">Chantier →</a></div>`;
+  });
+
+  if (!evts.length && !lignesChantier.length) { el.innerHTML = '<div class="todo-empty">Aucun rendez-vous aujourd\'hui.</div>'; return; }
+
+  el.innerHTML = lignesChantier.join('') + evts.map(e => {
     const heure = e.heure ? `<b>${e.heure.slice(0,5)}</b>` : '<span style="color:var(--stone)">journée</span>';
     const qui = e.assigne ? `<span class="todo-pill devis">${RDV_INIT[e.assigne] || ''}</span>` : '';
     const ch = chMap[e.chantier_id];

@@ -47,6 +47,10 @@
       <div class="field"><label>Client</label><input id="clientNom" placeholder="Nom du client"></div>
       <div class="field"><label>Adresse</label><input id="adresse" placeholder="Adresse"></div>
       <div class="field"><label>E-mail du client (pour les notifications auto)</label><input id="clientEmail" type="email" placeholder="client@email.fr"></div>
+      <div class="field" style="display:flex;gap:10px">
+        <span style="flex:1"><label>Début du chantier</label><input id="dateDebut" type="date" style="width:100%"></span>
+        <span style="flex:1"><label>Fin prévue</label><input id="dateFin" type="date" style="width:100%"></span>
+      </div>
       <div class="field">
         <label>Avancement : <span id="progLabel">0</span> %</label>
         <input type="range" id="progression" min="0" max="100" step="5" value="0" oninput="document.getElementById('progLabel').textContent=this.value">
@@ -168,6 +172,8 @@ async function charger() {
   document.getElementById('clientNom').value = data.client_nom;
   document.getElementById('adresse').value = data.adresse || '';
   if (document.getElementById('clientEmail')) document.getElementById('clientEmail').value = data.client_email || '';
+  if (document.getElementById('dateDebut')) document.getElementById('dateDebut').value = data.date_debut || '';
+  if (document.getElementById('dateFin')) document.getElementById('dateFin').value = data.date_fin || '';
   document.getElementById('progression').value = data.progression;
   document.getElementById('progLabel').textContent = data.progression;
   document.getElementById('statut').value = data.statut;
@@ -362,8 +368,13 @@ async function sauvegarder() {
     progression: parseInt(document.getElementById('progression').value),
     statut: nouveauStatut
   };
-  // Enregistre l'e-mail si la colonne existe (sinon on réessaie sans, pour ne rien casser)
-  let { error } = await sb.from('chantiers').update(Object.assign({ client_email: email || null }, maj)).eq('id', chantierId);
+  const optionnels = {
+    client_email: email || null,
+    date_debut: document.getElementById('dateDebut') ? (document.getElementById('dateDebut').value || null) : null,
+    date_fin: document.getElementById('dateFin') ? (document.getElementById('dateFin').value || null) : null
+  };
+  // Enregistre les champs optionnels si les colonnes existent (sinon on réessaie sans, pour ne rien casser)
+  let { error } = await sb.from('chantiers').update(Object.assign({}, optionnels, maj)).eq('id', chantierId);
   if (error) { await sb.from('chantiers').update(maj).eq('id', chantierId); }
 
   // Demande d'avis Google automatique quand le chantier passe à « terminé »
