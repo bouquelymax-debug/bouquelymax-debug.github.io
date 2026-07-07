@@ -77,6 +77,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="../js/email-config.js"></script>
 <script>
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let tousLesDocs = [];
@@ -88,14 +90,16 @@ sb.auth.getSession().then(({ data }) => {
 });
 
 async function charger() {
-  // Récupérer documents + nom client via jointure
-  const { data: docs } = await sb.from('documents')
-    .select('*, chantiers(client_nom)')
+  // Récupérer documents + client (nom + e-mail pour la relance 1-clic)
+  let { data: docs, error } = await sb.from('documents')
+    .select('*, chantiers(client_nom, client_email)')
     .order('created_at', { ascending: false });
+  if (error) { ({ data: docs } = await sb.from('documents').select('*, chantiers(client_nom)').order('created_at', { ascending: false })); }
 
   tousLesDocs = (docs || []).map(d => ({
     ...d,
-    client_nom: d.chantiers?.client_nom || 'Client inconnu'
+    client_nom: d.chantiers?.client_nom || 'Client inconnu',
+    client_email: d.chantiers?.client_email || ''
   }));
 
   // Totaux
@@ -135,25 +139,65 @@ function afficher() {
     return;
   }
 
+  const auj = new Date().toISOString().split('T')[0];
   el.innerHTML = liste.map(d => {
     const date = new Date(d.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
-    const statutBadge = d.type === 'facture'
-      ? `<span class="badge ${d.statut === 'paye' ? 'badge-paye' : 'badge-attente'}">${d.statut === 'paye' ? '✓ Payé' : 'En attente'}</span>`
-      : '';
+    const enRetard = d.type === 'facture' && d.statut === 'en-attente' && d.date_echeance && d.date_echeance < auj;
+    let statutBadge = '';
+    if (d.type === 'facture') {
+      statutBadge = d.statut === 'paye'
+        ? '<span class="badge badge-paye">✓ Payé</span>'
+        : (enRetard ? '<span class="badge badge-attente">⚠ En retard</span>' : '<span class="badge badge-attente">En attente</span>');
+    } else if (d.type === 'devis') {
+      statutBadge = d.statut === 'accepte'
+        ? '<span class="badge badge-paye">✓ Signé</span>'
+        : '<span class="badge badge-devis">Envoyé</span>';
+    }
+    // Actions en 1 clic
+    let actions = '';
+    if (d.type === 'facture' && d.statut === 'en-attente') {
+      actions += `<button class="btn ghost" style="font-size:12px;padding:6px 12px;flex:none" onclick="marquerPaye('${d.id}')">✓ Payé</button>`;
+      if (d.client_email) actions += `<button class="btn ghost" style="font-size:12px;padding:6px 12px;flex:none" onclick="relancer('${d.id}')">Relancer</button>`;
+    }
     return `
-      <div class="doc-row">
+      <div class="doc-row"${enRetard ? ' style="border-color:#e0b4b4"' : ''}>
         <div class="doc-icon">${d.type === 'devis' ? '📋' : '🧾'}</div>
         <div class="doc-info">
           <div class="doc-nom">${d.nom}</div>
-          <div class="doc-client">${d.client_nom} · <span class="badge ${d.type === 'devis' ? 'badge-devis' : 'badge-facture'}" style="display:inline;padding:2px 8px">${d.type}</span></div>
+          <div class="doc-client">${d.client_nom} · <span class="badge ${d.type === 'devis' ? 'badge-devis' : 'badge-facture'}" style="display:inline;padding:2px 8px">${d.type}</span>${d.date_echeance && d.type === 'facture' && d.statut !== 'paye' ? ' · échéance ' + new Date(d.date_echeance).toLocaleDateString('fr-FR') : ''}</div>
         </div>
         ${statutBadge}
         <div class="doc-montant">${d.montant ? d.montant.toLocaleString('fr-FR') + ' €' : '—'}</div>
         <div class="doc-date">${date}</div>
+        ${actions}
         ${d.fichier_url ? `<a href="${d.fichier_url}" target="_blank" class="btn ghost" style="font-size:12px;padding:6px 12px;flex:none">Voir</a>` : ''}
       </div>
     `;
   }).join('');
+}
+
+async function marquerPaye(id) {
+  await sb.from('documents').update({ statut: 'paye', date_paiement: new Date().toISOString().split('T')[0] }).eq('id', id);
+  charger();
+}
+
+async function relancer(id) {
+  const d = tousLesDocs.find(x => x.id === id);
+  if (!d || !d.client_email) return;
+  if (!window.mmSendEmail) { alert('Service e-mail non disponible.'); return; }
+  const montant = d.montant ? Number(d.montant).toFixed(2) + ' €' : '';
+  const r = await window.mmSendEmail({
+    to_email: d.client_email,
+    to_name: d.client_nom,
+    sujet: 'Rappel concernant votre facture — Maison Matière',
+    message: 'Bonjour ' + d.client_nom + ',\n\n'
+      + 'Sauf erreur de notre part, la facture ' + d.nom + (montant ? ' d\'un montant de ' + montant : '')
+      + ' reste en attente de règlement.\n'
+      + 'Merci de procéder au paiement dès que possible. Si c\'est déjà fait, n\'en tenez pas compte.\n\n'
+      + 'Cordialement,\nMaison Matière — 06 99 83 56 52'
+  });
+  try { await sb.from('documents').update({ derniere_relance: new Date().toISOString().split('T')[0] }).eq('id', id); } catch (e) {}
+  alert(r && r.ok !== false ? '✓ Relance envoyée à ' + d.client_email : 'Envoi effectué (vérifiez la réception).');
 }
 </script>
 </body>

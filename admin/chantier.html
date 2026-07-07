@@ -37,6 +37,9 @@
   <span class="back" onclick="location.href='dashboard.html'">← Retour</span>
   <div class="brand">Maison Matière</div>
   <span id="topNom" style="font-size:14px;color:var(--stone)"></span>
+  <span style="flex:1"></span>
+  <button class="btn ghost" id="btnDevis" style="font-size:12px;padding:9px 16px" onclick="location.href='devis.html?ch='+chantierId">📋 Devis pré-rempli</button>
+  <button class="btn ghost" id="btnFacture" style="font-size:12px;padding:9px 16px" onclick="location.href='facture.html?ch='+chantierId">🧾 Facture pré-remplie</button>
 </div>
 
 <div class="page">
@@ -216,6 +219,39 @@ async function ajouterEtape() {
 
 async function changerStatut(id, statut) {
   await sb.from('etapes').update({ statut }).eq('id', id);
+  chargerEtapes();
+  majProgressionAuto();
+}
+
+// Progression calculée automatiquement depuis les étapes (terminé = 1, en cours = 0,5)
+async function majProgressionAuto() {
+  const { data } = await sb.from('etapes').select('statut').eq('chantier_id', chantierId);
+  if (!data || !data.length) return;
+  const score = data.reduce((s, e) => s + (e.statut === 'termine' ? 1 : e.statut === 'en-cours' ? 0.5 : 0), 0);
+  const pct = Math.round((score / data.length) * 100 / 5) * 5;
+  document.getElementById('progression').value = pct;
+  document.getElementById('progLabel').textContent = pct;
+  const maj = { progression: pct };
+  // Chantier terminé de lui-même quand tout est fini
+  if (pct === 100 && chantierData && chantierData.statut !== 'terminé') {
+    maj.statut = 'terminé';
+    document.getElementById('statut').value = 'terminé';
+    chantierData.statut = 'terminé';
+    // Demande d'avis Google automatique (comme via « Sauvegarder »)
+    const email = chantierData.client_email || '';
+    if (email && window.mmSendEmail) {
+      window.mmSendEmail({
+        to_email: email,
+        to_name: chantierData.client_nom || '',
+        sujet: 'Votre avis compte pour nous 🙏 — Maison Matière',
+        message: 'Bonjour ' + (chantierData.client_nom || '') + ',\n\n'
+          + 'Merci de nous avoir fait confiance pour votre chantier !\n'
+          + 'Si vous êtes satisfait, un avis Google nous aiderait énormément (2 minutes) :\n'
+          + ((window.MM_EMAIL && window.MM_EMAIL.REVIEW_URL) || '') + '\n\nMerci beaucoup,\nMaison Matière'
+      });
+    }
+  }
+  await sb.from('chantiers').update(maj).eq('id', chantierId);
 }
 
 async function chargerDocs() {

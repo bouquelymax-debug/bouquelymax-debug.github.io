@@ -343,6 +343,9 @@ let CH_MAP = {};
   (ch || []).forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.client_nom; CH_MAP[c.id] = c; sel.appendChild(o); });
   sel.addEventListener('change', remplirClient);
   preRemplirDepuisDevis(sel);
+  // Arrivée depuis une fiche chantier (?ch=...) : tout se pré-remplit
+  const pre = new URLSearchParams(location.search).get('ch');
+  if (pre && CH_MAP[pre]) { sel.value = pre; remplirClient(); }
   numeroAuto(); // numéro proposé automatiquement à l'ouverture
 })();
 

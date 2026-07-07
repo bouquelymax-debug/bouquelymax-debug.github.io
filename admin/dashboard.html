@@ -74,6 +74,7 @@
     <button class="btn ghost" onclick="location.href='leads.html'">📥 Demandes</button>
     <button class="btn ghost" onclick="location.href='devis.html'">📋 Devis</button>
     <button class="btn ghost" onclick="location.href='facture.html'">🧾 Facture</button>
+    <button class="btn ghost" onclick="location.href='archives.html'">🗂 Archives</button>
     <button class="btn ghost" onclick="deconnexion()">Déco.</button>
   </div>
 </div>
@@ -131,10 +132,12 @@
     <form id="newForm">
       <div class="field"><label>Nom du client</label><input id="clientNom" placeholder="ex. M. Dupont" required></div>
       <div class="field"><label>Adresse du chantier</label><input id="adresse" placeholder="ex. 12 rue des Lilas, Nevers"></div>
-      <div class="field">
-        <label>Avancement : <span id="progLabel">0</span> %</label>
-        <input type="range" id="progression" min="0" max="100" step="5" value="0" oninput="document.getElementById('progLabel').textContent=this.value">
+      <div class="field"><label>E-mail du client (active les notifications, relances et signature)</label><input id="nEmail" type="email" placeholder="client@email.fr"></div>
+      <div class="field" style="display:flex;gap:10px">
+        <span style="flex:1"><label>Début</label><input id="nDebut" type="date" style="width:100%"></span>
+        <span style="flex:1"><label>Fin prévue</label><input id="nFin" type="date" style="width:100%"></span>
       </div>
+      <div style="font-size:12px;color:var(--stone);margin-top:2px">Les étapes types (préparation, travaux, finitions, réception) sont créées automatiquement. Le chantier apparaîtra sur le calendrier selon ses dates.</div>
       <div style="display:flex;gap:12px;margin-top:20px">
         <button class="btn" type="submit" style="flex:1">Créer le chantier</button>
         <button class="btn ghost" type="button" onclick="closeModal()" style="flex:1">Annuler</button>
@@ -359,14 +362,32 @@ document.getElementById('newForm').addEventListener('submit', async function(e) 
   e.preventDefault();
   const btn = this.querySelector('button[type=submit]');
   btn.textContent = 'Création…'; btn.disabled = true;
-  const { error } = await sb.from('chantiers').insert({
+  const base = {
     client_nom: document.getElementById('clientNom').value,
     adresse: document.getElementById('adresse').value,
-    progression: parseInt(document.getElementById('progression').value)
-  });
-  if (error) { alert('Erreur : ' + error.message); }
-  else { closeModal(); chargerChantiers(); this.reset(); }
-  btn.textContent = 'Créer le chantier'; btn.disabled = false;
+    progression: 0
+  };
+  const optionnels = {
+    client_email: document.getElementById('nEmail').value.trim() || null,
+    date_debut: document.getElementById('nDebut').value || null,
+    date_fin: document.getElementById('nFin').value || null
+  };
+  // Essaie avec tous les champs, retombe sur la base si une colonne manque
+  let { data, error } = await sb.from('chantiers').insert(Object.assign({}, optionnels, base)).select().single();
+  if (error) { ({ data, error } = await sb.from('chantiers').insert(base).select().single()); }
+  if (error) { alert('Erreur : ' + error.message); btn.textContent = 'Créer le chantier'; btn.disabled = false; return; }
+
+  // Étapes types créées automatiquement
+  try {
+    await sb.from('etapes').insert([
+      { chantier_id: data.id, nom: 'Préparation & protection', ordre: 0 },
+      { chantier_id: data.id, nom: 'Travaux principaux', ordre: 1 },
+      { chantier_id: data.id, nom: 'Finitions', ordre: 2 },
+      { chantier_id: data.id, nom: 'Nettoyage & réception', ordre: 3 }
+    ]);
+  } catch (err) {}
+
+  location.href = 'chantier.html?id=' + data.id;
 });
 
 async function deconnexion() {
