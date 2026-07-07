@@ -172,14 +172,29 @@ async function chargerRdvJour() {
   }
   evts.sort((a, b) => (a.heure || '99') > (b.heure || '99') ? 1 : -1);
   if (!evts.length) { el.innerHTML = '<div class="todo-empty">Aucun rendez-vous aujourd\'hui.</div>'; return; }
+
+  // Chantiers rattachés (pour afficher le client + lien vers la fiche)
+  const chMap = {};
+  const ids = [...new Set(evts.map(e => e.chantier_id).filter(Boolean))];
+  if (ids.length) {
+    const { data: chs } = await sb.from('chantiers').select('id, client_nom, adresse').in('id', ids);
+    (chs || []).forEach(c => chMap[c.id] = c);
+  }
+
+  const esc = s => (s || '').replace(/</g, '&lt;');
   el.innerHTML = evts.map(e => {
     const heure = e.heure ? `<b>${e.heure.slice(0,5)}</b>` : '<span style="color:var(--stone)">journée</span>';
     const qui = e.assigne ? `<span class="todo-pill devis">${RDV_INIT[e.assigne] || ''}</span>` : '';
-    const meta = [RDV_TYPES[e.type] || '', e.lieu].filter(Boolean).join(' · ');
+    const ch = chMap[e.chantier_id];
+    const lieu = e.lieu || (ch ? ch.adresse : '');
+    const meta = [RDV_TYPES[e.type] || '', ch ? '🏠 ' + esc(ch.client_nom) : '', lieu].filter(Boolean).join(' · ');
+    const lien = ch
+      ? `<a class="btn ghost" href="chantier.html?id=${e.chantier_id}">Chantier →</a>`
+      : `<a class="btn ghost" href="calendrier.html">Ouvrir →</a>`;
     return `<div class="todo-item"><span style="display:flex;gap:10px;align-items:center">
       <span style="font-family:'Space Mono';min-width:52px">${heure}</span>
-      <span>${qui}<b>${(e.titre||'').replace(/</g,'&lt;')}</b>${meta ? ` <span style="color:var(--stone)">— ${meta.replace(/</g,'&lt;')}</span>` : ''}</span>
-    </span><a class="btn ghost" href="calendrier.html">Ouvrir →</a></div>`;
+      <span>${qui}<b>${esc(e.titre)}</b>${meta ? ` <span style="color:var(--stone)">— ${meta}</span>` : ''}</span>
+    </span>${lien}</div>`;
   }).join('');
 }
 
