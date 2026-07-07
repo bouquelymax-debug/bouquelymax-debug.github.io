@@ -84,10 +84,10 @@ async function charger() {
 
 async function creerChantier(l) {
   const nom = `${l.prenom||''} ${l.nom||''}`.trim() || 'Nouveau client';
-  const { data, error } = await sb.from('chantiers').insert({ client_nom: nom, progression: 0 }).select().single();
+  // Tout ce que la demande contient est repris automatiquement dans le chantier
+  let { data, error } = await sb.from('chantiers').insert({ client_nom: nom, client_email: l.email || null, progression: 0 }).select().single();
+  if (error) { ({ data, error } = await sb.from('chantiers').insert({ client_nom: nom, progression: 0 }).select().single()); }
   if (error) { alert('Erreur : ' + error.message); return; }
-  // Tente d'enregistrer l'e-mail client (si la colonne existe)
-  if (l.email && data) { try { await sb.from('chantiers').update({ client_email: l.email }).eq('id', data.id); } catch (e) {} }
   await sb.from('leads').update({ statut: 'traite' }).eq('id', l.id);
   location.href = 'chantier.html?id=' + data.id;
 }

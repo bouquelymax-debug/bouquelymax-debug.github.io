@@ -110,12 +110,11 @@
   <button class="primary" onclick="telechargerPDF()">Télécharger le PDF</button>
   <button onclick="printPDF()">Imprimer</button>
   <button onclick="addRow()">+ Ligne</button>
-  <button onclick="numeroAuto()">N° auto</button>
-  <select id="chSelect" style="font-family:inherit;font-size:13px;padding:8px 10px;border-radius:9px;border:none;max-width:170px"><option value="">— Lier à un chantier —</option></select>
+  <select id="chSelect" style="font-family:inherit;font-size:13px;padding:8px 10px;border-radius:9px;border:none;max-width:170px"><option value="">— Choisir le chantier —</option></select>
   <button class="primary" onclick="envoyerClient()">📤 Envoyer au client</button>
   <button onclick="versFacture()">→ Transformer en facture</button>
   <button onclick="saveHTML()">Enregistrer le modèle</button>
-  <div class="hint">Cliquez sur un texte pour le modifier. « N° auto » propose le prochain numéro · « Envoyer au client » dépose le devis directement dans son espace de suivi · « Transformer en facture » reprend les lignes et le client dans une nouvelle facture.</div>
+  <div class="hint">Choisissez le chantier : le client, le numéro et la date se remplissent tout seuls. Cliquez sur un texte pour l'ajuster si besoin.</div>
 </div>
 
 <div id="signBox" style="display:none;background:#eef7ee;border:1px solid #bfe0bf;border-radius:12px;padding:14px 16px;margin:12px auto;max-width:900px;font-family:system-ui,sans-serif">
@@ -317,13 +316,51 @@
 <script src="../js/email-config.js"></script>
 <script>
 const sbDoc = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let CH_MAP = {};
+
+// Épuration : efface les textes d'exemple (les champs affichent alors leur libellé gris)
+(function () {
+  const demo = ['Mme Camille Lemoine', '8 rue du Cygne', '18000 Bourges', 'Chantier : séjour & cuisine'];
+  document.querySelectorAll('.parties .right .name, .parties .right .l').forEach(el => {
+    if (demo.indexOf(el.textContent.trim()) !== -1) el.textContent = '';
+  });
+})();
+
+// Dates automatiques (aujourd'hui)
+(function () {
+  const t = new Date();
+  const long = t.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const court = t.toLocaleDateString('fr-FR');
+  const spans = document.querySelectorAll('.doctype .no span');
+  if (spans[1]) spans[1].textContent = long;
+  document.querySelectorAll('.metarow .cell').forEach(c => {
+    const k = c.querySelector('.k');
+    if (k && k.textContent.trim() === 'Date du devis') { const v = c.querySelector('.v'); if (v) v.textContent = court; }
+  });
+})();
+
 (async function () {
   const { data } = await sbDoc.auth.getSession();
   if (!data.session) return;
-  const { data: ch } = await sbDoc.from('chantiers').select('id,client_nom').order('created_at', { ascending: false });
+  const { data: ch } = await sbDoc.from('chantiers').select('id,client_nom,adresse,client_email').order('created_at', { ascending: false });
   const sel = document.getElementById('chSelect');
-  (ch || []).forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.client_nom; sel.appendChild(o); });
+  (ch || []).forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.client_nom; CH_MAP[c.id] = c; sel.appendChild(o); });
+  sel.addEventListener('change', remplirClient);
+  numeroAuto(); // numéro proposé automatiquement à l'ouverture
 })();
+
+// Remplit le bloc « Adressé à » depuis la fiche chantier sélectionnée
+function remplirClient() {
+  const c = CH_MAP[document.getElementById('chSelect').value];
+  if (!c) return;
+  const right = document.querySelector('.parties .right');
+  if (!right) return;
+  const nameEl = right.querySelector('.name'); if (nameEl) nameEl.textContent = c.client_nom || '';
+  const ls = right.querySelectorAll('.l');
+  if (ls[0]) ls[0].textContent = c.adresse || '';
+  if (ls[1]) ls[1].textContent = '';
+  if (ls[2]) ls[2].textContent = '';
+}
 
 async function numeroAuto() {
   const annee = new Date().getFullYear();
@@ -334,7 +371,6 @@ async function numeroAuto() {
   } catch (e) {}
   const num = 'DEV-' + annee + '-' + String(prochain).padStart(4, '0');
   document.querySelector('.doctype .no span').textContent = num;
-  alert('Numéro proposé : ' + num + '\n(Il sera réservé au moment de l\'envoi au client.)');
 }
 
 async function envoyerClient() {
