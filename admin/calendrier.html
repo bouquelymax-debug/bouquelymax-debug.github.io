@@ -76,6 +76,14 @@
     .jour-evt .suppr{border:none;background:none;color:#c0392b;font-size:16px;cursor:pointer;padding:0 4px}
     .p-rdv{background:#3a5bbf}.p-visite{background:#b06010}.p-chantier{background:#1e2127}.p-autre{background:#7c766c}.p-echeance{background:#c0392b}
 
+    /* Filtre par personne */
+    .filtres{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+    .filtres .lbl{font-family:"Space Mono";font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--stone);margin-right:2px}
+    .fp{background:#fff;border:1px solid var(--line);border-radius:100px;padding:7px 16px;font-family:"Space Grotesk";font-weight:600;font-size:13px;cursor:pointer;color:var(--ink2)}
+    .fp.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+    .who{display:inline-block;font-family:"Space Mono";font-size:8.5px;font-weight:700;background:rgba(255,255,255,.3);border-radius:4px;padding:0 3px;margin-right:3px;vertical-align:middle}
+    .avenir-item .who,.jour-evt .who{background:var(--plaster);color:var(--ink2)}
+
     @media(max-width:640px){
       .cal-cell{min-height:74px;padding:4px}
       .ev{font-size:9px;padding:1px 4px}
@@ -104,6 +112,13 @@
       <button class="today" onclick="allerAujourdhui()">Aujourd'hui</button>
       <button onclick="changerMois(1)" aria-label="Mois suivant">›</button>
     </div>
+  </div>
+
+  <div class="filtres" id="filtrePers">
+    <span class="lbl">Agenda de</span>
+    <button class="fp on" data-p="">Tous</button>
+    <button class="fp" data-p="maxence">Maxence</button>
+    <button class="fp" data-p="guillaume">Guillaume</button>
   </div>
 
   <div class="legende">
@@ -145,6 +160,14 @@
         </div>
         <div class="field"><label>Heure (optionnel)</label><input id="f-heure" type="time"></div>
       </div>
+      <div class="field"><label>Assigné à</label>
+        <select id="f-assigne">
+          <option value="">— Non assigné —</option>
+          <option value="maxence">Maxence</option>
+          <option value="guillaume">Guillaume</option>
+          <option value="deux">Maxence &amp; Guillaume</option>
+        </select>
+      </div>
       <div class="grid2f">
         <div class="field"><label>Date</label><input id="f-date" type="date" required></div>
         <div class="field"><label>Jusqu'au (optionnel)</label><input id="f-datefin" type="date"></div>
@@ -169,6 +192,15 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const MOIS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 const DOW = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 const TYPES_LBL = { rdv:'RDV client', visite:'Visite / devis', chantier:'Chantier', autre:'Autre', echeance:'Échéance facture' };
+const PERSONNES = { maxence:'Maxence', guillaume:'Guillaume', deux:'Maxence & Guillaume' };
+const INIT = { maxence:'M', guillaume:'G', deux:'M·G' };
+let FILTRE = '';           // '', 'maxence' ou 'guillaume'
+
+function passeFiltre(e){
+  if (e._cat === 'echeance') return true;      // les échéances s'affichent toujours
+  if (!FILTRE) return true;
+  return e.assigne === FILTRE || e.assigne === 'deux';
+}
 
 let annee, mois;           // mois affiché
 let EVTS = [];             // événements (table evenements)
@@ -256,13 +288,13 @@ function rendre(){
     else d = i - decal + 1;
     const dt = new Date(y, m, d);
     const isoStr = iso(dt.getFullYear(), dt.getMonth(), dt.getDate());
-    const evts = evtsDuJour(isoStr);
+    const evts = evtsDuJour(isoStr).filter(passeFiltre);
     const visibles = evts.slice(0, 3);
     const reste = evts.length - visibles.length;
 
     html += '<div class="cal-cell' + (hors ? ' hors' : '') + (isoStr === auj ? ' auj' : '') + '" onclick="ouvrirModal(\'' + isoStr + '\')">'
       + '<span class="dnum">' + dt.getDate() + '</span>'
-      + visibles.map(e => '<span class="ev ' + e._cat + '" title="' + esc(e.titre) + '">' + (e.heure ? e.heure.slice(0,5) + ' ' : '') + esc(e.titre) + '</span>').join('')
+      + visibles.map(e => '<span class="ev ' + e._cat + '" title="' + esc(e.titre) + '">' + (e.assigne ? '<span class="who">' + INIT[e.assigne] + '</span>' : '') + (e.heure ? e.heure.slice(0,5) + ' ' : '') + esc(e.titre) + '</span>').join('')
       + (reste > 0 ? '<span class="ev-plus">+ ' + reste + ' autre' + (reste > 1 ? 's' : '') + '</span>' : '')
       + '</div>';
   }
@@ -277,7 +309,7 @@ function rendreAvenir(){
   const limiteIso = iso(limite.getFullYear(), limite.getMonth(), limite.getDate());
 
   const items = [];
-  EVTS.forEach(e => { if (e.date >= auj && e.date <= limiteIso) items.push({ date: e.date, heure: e.heure, cat: e.type || 'rdv', titre: e.titre, lieu: e.lieu }); });
+  EVTS.forEach(e => { if (e.date >= auj && e.date <= limiteIso && (!FILTRE || e.assigne === FILTRE || e.assigne === 'deux')) items.push({ date: e.date, heure: e.heure, cat: e.type || 'rdv', titre: e.titre, lieu: e.lieu, assigne: e.assigne }); });
   ECHEANCES.forEach(d => {
     if (d.date_echeance >= auj && d.date_echeance <= limiteIso) {
       const ch = CHANTIERS.find(c => c.id === d.chantier_id);
@@ -291,7 +323,7 @@ function rendreAvenir(){
   el.innerHTML = items.map(it => {
     const [y, m, d] = it.date.split('-').map(Number);
     const quand = new Date(y, m - 1, d).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }) + (it.heure ? ' · ' + it.heure.slice(0,5) : '');
-    return '<div class="avenir-item"><span class="pastille p-' + it.cat + '"></span><span class="quand">' + quand + '</span><span>' + esc(it.titre) + (it.lieu ? ' <span style="color:var(--stone)">· ' + esc(it.lieu) + '</span>' : '') + '</span></div>';
+    return '<div class="avenir-item"><span class="pastille p-' + it.cat + '"></span><span class="quand">' + quand + '</span><span>' + (it.assigne ? '<span class="who">' + INIT[it.assigne] + '</span> ' : '') + esc(it.titre) + (it.lieu ? ' <span style="color:var(--stone)">· ' + esc(it.lieu) + '</span>' : '') + '</span></div>';
   }).join('');
 }
 
@@ -317,7 +349,7 @@ function ouvrirModal(isoStr){
   box.innerHTML = evts.length ? evts.map(e =>
     '<div class="jour-evt"><span class="pastille p-' + e._cat + '"></span>'
     + '<div class="infos"><div>' + (e.heure ? '<b>' + e.heure.slice(0,5) + '</b> · ' : '') + esc(e.titre) + '</div>'
-    + '<div class="sub">' + (TYPES_LBL[e._cat] || '') + (e.lieu ? ' · ' + esc(e.lieu) : '') + (e.date_fin && e.date_fin !== e.date ? ' · jusqu\'au ' + e.date_fin.split('-').reverse().join('/') : '') + '</div>'
+    + '<div class="sub">' + (TYPES_LBL[e._cat] || '') + (e.assigne ? ' · ' + PERSONNES[e.assigne] : '') + (e.lieu ? ' · ' + esc(e.lieu) : '') + (e.date_fin && e.date_fin !== e.date ? ' · jusqu\'au ' + e.date_fin.split('-').reverse().join('/') : '') + '</div>'
     + (e.notes ? '<div class="sub">' + esc(e.notes) + '</div>' : '') + '</div>'
     + (e._readonly ? '' : '<button class="suppr" title="Supprimer" onclick="supprimerEvt(\'' + e.id + '\')">×</button>')
     + '</div>').join('') : '';
@@ -339,6 +371,7 @@ document.getElementById('evForm').addEventListener('submit', async function (e) 
     heure: document.getElementById('f-heure').value || null,
     lieu: document.getElementById('f-lieu').value || null,
     chantier_id: document.getElementById('f-chantier').value || null,
+    assigne: document.getElementById('f-assigne').value || null,
     notes: document.getElementById('f-notes').value || null
   });
   btn.disabled = false; btn.textContent = 'Enregistrer';
@@ -347,6 +380,13 @@ document.getElementById('evForm').addEventListener('submit', async function (e) 
   await chargerDonnees();
   rendre();
 });
+
+// ---- Filtre par personne ----
+document.querySelectorAll('#filtrePers .fp').forEach(b => b.addEventListener('click', () => {
+  FILTRE = b.dataset.p;
+  document.querySelectorAll('#filtrePers .fp').forEach(x => x.classList.toggle('on', x === b));
+  rendre();
+}));
 
 async function supprimerEvt(id){
   if (!confirm('Supprimer cet événement ?')) return;
