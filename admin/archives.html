@@ -8,9 +8,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
   <style>
     *{-webkit-tap-highlight-color:transparent}
-    body{background:var(--plaster)}
+    body{background:var(--paper,#FBF9F5)}
     .topbar{background:#fff;border-bottom:1px solid var(--line);padding:14px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
     .topbar .brand{font-family:"Space Grotesk";font-weight:600;letter-spacing:.16em;text-transform:uppercase;font-size:14px}
     .back{font-family:"Space Mono";font-size:11px;color:var(--stone);cursor:pointer;text-decoration:none}
@@ -48,10 +49,24 @@
 </head>
 <body>
 
-<div class="topbar">
-  <a class="back" href="dashboard.html">← Tableau de bord</a>
-  <div class="brand">Archives</div>
-</div>
+<header class="nav">
+  <a class="nav-brand" href="dashboard.html">
+    <svg viewBox="0 0 100 100" width="30" height="30" xmlns="http://www.w3.org/2000/svg"><path d="M25 81 V23 L50 56 L75 23 V81" fill="none" stroke="#A3967A" stroke-width="15.5" stroke-linejoin="miter" stroke-linecap="square"/></svg>
+    <div><b>Maison Matière</b><small>Espace admin</small></div>
+  </a>
+  <nav class="nav-links">
+    <a href="dashboard.html">Tableau de bord</a>
+    <a href="calendrier.html">Calendrier</a>
+    <a href="finances.html">Finances</a>
+    <a href="leads.html">Demandes</a>
+    <a href="devis.html">Devis</a>
+    <a href="facture.html">Facture</a>
+    <a class="on" href="archives.html">Archives</a>
+  </nav>
+  <div class="nav-cta">
+    <button class="nav-out" onclick="sb.auth.signOut().then(function(){location.href='index.html'})">Quitter</button>
+  </div>
+</header>
 
 <div class="page">
   <!-- Totaux -->

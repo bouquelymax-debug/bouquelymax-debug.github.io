@@ -6,6 +6,7 @@
 <title>Maison Matière — Devis modifiable</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../css/admin.css">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -13,6 +14,7 @@
     --paper:#FFFFFF; --panel:#F6F3ED; --sand:#9C8E76; --edit:#1E6B4D;
   }
   *{box-sizing:border-box}
+  .nav{position:static}
   body{margin:0;background:#DED9D0;font-family:"Hanken Grotesk",system-ui,sans-serif;color:var(--ink);
     -webkit-font-smoothing:antialiased;line-height:1.45;
     background-image:radial-gradient(circle at 1px 1px,rgba(30,33,39,.03) 1px,transparent 0);background-size:22px 22px}
@@ -104,8 +106,26 @@
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.14.0/dist/html2pdf.bundle.min.js"></script>
 </head>
 <body>
+<header class="nav">
+  <a class="nav-brand" href="dashboard.html">
+    <svg viewBox="0 0 100 100" width="30" height="30" xmlns="http://www.w3.org/2000/svg"><path d="M25 81 V23 L50 56 L75 23 V81" fill="none" stroke="#A3967A" stroke-width="15.5" stroke-linejoin="miter" stroke-linecap="square"/></svg>
+    <div><b>Maison Matière</b><small>Espace admin</small></div>
+  </a>
+  <nav class="nav-links">
+    <a href="dashboard.html">Tableau de bord</a>
+    <a href="calendrier.html">Calendrier</a>
+    <a href="finances.html">Finances</a>
+    <a href="leads.html">Demandes</a>
+    <a class="on" href="devis.html">Devis</a>
+    <a href="facture.html">Facture</a>
+    <a href="archives.html">Archives</a>
+  </nav>
+  <div class="nav-cta">
+    <button class="nav-out" onclick="sbDoc.auth.signOut().then(function(){location.href='index.html'})">Quitter</button>
+  </div>
+</header>
+
 <div class="toolbar">
-  <a class="back" href="dashboard.html">← Tableau de bord</a>
   <span class="ttl">Maison Matière · Devis modifiable</span>
   <button class="primary" onclick="telechargerPDF()">Télécharger le PDF</button>
   <button onclick="printPDF()">Imprimer</button>

@@ -8,8 +8,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
   <style>
-    body{background:var(--plaster)}
+    body{background:var(--paper,#FBF9F5)}
     .topbar{background:#fff;border-bottom:1px solid var(--line);padding:14px 24px;display:flex;align-items:center;gap:16px}
     .topbar .brand{font-family:"Space Grotesk";font-weight:600;letter-spacing:.16em;text-transform:uppercase;font-size:15px}
     .back{font-family:"Space Mono";font-size:11px;color:var(--stone);cursor:pointer}
@@ -33,14 +34,20 @@
 </head>
 <body>
 
-<div class="topbar">
-  <span class="back" onclick="location.href='dashboard.html'">← Retour</span>
-  <div class="brand">Maison Matière</div>
-  <span id="topNom" style="font-size:14px;color:var(--stone)"></span>
-  <span style="flex:1"></span>
-  <button class="btn ghost" id="btnDevis" style="font-size:12px;padding:9px 16px" onclick="location.href='devis.html?ch='+chantierId">📋 Devis pré-rempli</button>
-  <button class="btn ghost" id="btnFacture" style="font-size:12px;padding:9px 16px" onclick="location.href='facture.html?ch='+chantierId">🧾 Facture pré-remplie</button>
-</div>
+<header class="nav">
+  <a class="nav-brand" href="dashboard.html">
+    <svg viewBox="0 0 100 100" width="30" height="30" xmlns="http://www.w3.org/2000/svg"><path d="M25 81 V23 L50 56 L75 23 V81" fill="none" stroke="#A3967A" stroke-width="15.5" stroke-linejoin="miter" stroke-linecap="square"/></svg>
+    <div><b>Maison Matière</b><small>Espace admin</small></div>
+  </a>
+  <nav class="nav-links">
+    <a href="dashboard.html">← Tableau de bord</a>
+    <span style="font-family:'Space Mono';font-size:11px;color:var(--stone);padding:8px 12px;white-space:nowrap" id="topNom"></span>
+  </nav>
+  <div class="nav-cta">
+    <button class="nav-mini" id="btnDevis" onclick="location.href='devis.html?ch='+chantierId">📋 Devis pré-rempli</button>
+    <button class="nav-mini" id="btnFacture" onclick="location.href='facture.html?ch='+chantierId">🧾 Facture pré-remplie</button>
+  </div>
+</header>
 
 <div class="page">
   <!-- Colonne gauche : infos + ajout mise à jour -->

@@ -1,0 +1,43 @@
+/* ===== Maison Matière — habillage commun de l'espace admin ===== */
+
+:root{
+  --ink:#15171B;--ink2:#3A3E46;
+  --plaster:#EFEBE3;--plaster2:#E5DFD3;
+  --paper:#FBF9F5;--stone:#837C70;--line:#E2DBCD;
+  --sand:#A8916D;--sand2:#C4AD85;--cream:#F2E7D9;
+}
+
+body{background:var(--paper,#FBF9F5)}
+
+/* ---- Navigation commune ---- */
+.nav{position:sticky;top:0;z-index:50;background:rgba(251,249,245,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:0 22px;display:flex;align-items:center;gap:26px;height:64px}
+.nav-brand{display:flex;align-items:center;gap:10px;flex:none;text-decoration:none;color:inherit}
+.nav-brand svg{flex:none}
+.nav-brand b{font-family:"Space Grotesk";font-weight:600;font-size:14px;letter-spacing:.1em;text-transform:uppercase;display:block;line-height:1.1}
+.nav-brand small{font-family:"Space Mono";font-size:9.5px;color:var(--stone);letter-spacing:.08em}
+.nav-links{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
+.nav-links::-webkit-scrollbar{display:none}
+.nav-links a{font-family:"Space Mono";font-size:11px;letter-spacing:.05em;color:var(--stone);text-decoration:none;padding:8px 12px;border-radius:100px;white-space:nowrap;transition:all .15s}
+.nav-links a:hover{color:var(--ink);background:var(--plaster)}
+.nav-links a.on{color:#fff;background:var(--ink)}
+.nav-cta{display:flex;align-items:center;gap:10px;flex:none}
+.btn-new{font-family:"Space Grotesk";font-weight:600;font-size:13px;padding:10px 18px;border-radius:100px;background:var(--ink);color:#fff;border:none;cursor:pointer;transition:transform .15s,box-shadow .2s;white-space:nowrap}
+.btn-new:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(21,23,27,.22)}
+.nav-out{font-family:"Space Mono";font-size:10px;color:var(--stone);background:none;border:1px solid var(--line);border-radius:100px;padding:8px 13px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.nav-out:hover{color:#c0392b;border-color:#c0392b}
+.nav-mini{font-family:"Space Grotesk";font-weight:600;font-size:12px;padding:9px 15px;border-radius:100px;background:transparent;color:var(--ink);border:1px solid rgba(21,23,27,.28);cursor:pointer;transition:all .15s;white-space:nowrap}
+.nav-mini:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* ---- Panneaux communs ---- */
+.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 1px 2px rgba(21,23,27,.03)}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
+.panel-head h2{font-family:"Space Mono";font-weight:700;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--stone);margin:0}
+.panel-head a{font-family:"Space Mono";font-size:10.5px;color:var(--sand,#A8916D);text-decoration:none;white-space:nowrap}
+.panel-head a:hover{color:var(--ink)}
+.section-title{font-family:"Space Mono";font-weight:700;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--stone);margin:0}
+
+@media(max-width:760px){
+  .nav{height:auto;padding:10px 14px;flex-wrap:wrap;gap:10px}
+  .nav-links{order:3;flex-basis:100%}
+}
+@media print{.nav{display:none!important}}
