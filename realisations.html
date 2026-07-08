@@ -40,40 +40,16 @@
     <span class="eyebrow">Réalisations</span>
     <h1 style="margin-top:12px">Nos chantiers.</h1>
     <div class="swipe"></div>
-    <p class="lead">Avant / après, finitions et matières. Cette galerie se remplira au fil de nos réalisations — remplacez ces emplacements par vos vraies photos.</p>
+    <p class="lead">Enduits à la chaux, béton ciré, plâtrerie et finitions soignées, réalisés à Nevers et dans un rayon de 50 km.</p>
   </div>
 </section>
 
-<section>
+<!-- Réalisation à la une -->
+<section style="padding-top:0">
   <div class="wrap">
-    <span class="eyebrow">Avant / Après</span>
-    <h2 style="margin:10px 0 6px">Le pouvoir de la matière.</h2>
-    <p class="lead" style="margin-bottom:24px">Faites glisser le curseur pour révéler la transformation.</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" class="ba-grid">
-      <div>
-        <div class="ba" style="background:#cabfae">
-          <div class="ba-ph">Photos avant / après à venir</div>
-          <img class="ba-before" src="assets/avant-1.jpg" alt="Avant" onerror="this.style.display='none'">
-          <img class="ba-after" src="assets/apres-1.jpg" alt="Après" onerror="this.style.display='none'">
-          <span class="ba-lbl l">Avant</span>
-          <span class="ba-lbl r">Après</span>
-          <div class="ba-line"></div>
-          <div class="ba-handle">⇆</div>
-        </div>
-        <p style="font-family:'Space Mono';font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--stone);margin-top:10px">Séjour — béton ciré</p>
-      </div>
-      <div>
-        <div class="ba" style="background:#bfc4c0">
-          <div class="ba-ph">Photos avant / après à venir</div>
-          <img class="ba-before" src="assets/avant-2.jpg" alt="Avant" onerror="this.style.display='none'">
-          <img class="ba-after" src="assets/apres-2.jpg" alt="Après" onerror="this.style.display='none'">
-          <span class="ba-lbl l">Avant</span>
-          <span class="ba-lbl r">Après</span>
-          <div class="ba-line"></div>
-          <div class="ba-handle">⇆</div>
-        </div>
-        <p style="font-family:'Space Mono';font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--stone);margin-top:10px">Salle de bain — enduit à la chaux</p>
-      </div>
+    <div class="shot" data-img="assets/realisations/salle-de-bain.png" style="aspect-ratio:16/9;min-height:280px;width:100%">
+      <span class="ph">Photo</span>
+      <span class="cap">Salle de bain — murs enduits à la chaux</span>
     </div>
   </div>
 </section>
@@ -82,22 +58,21 @@
   <div class="wrap">
     <span class="eyebrow">Galerie</span>
     <h2 style="margin:10px 0 24px">Nos finitions.</h2>
-    <div class="gallery">
-      <!-- Pour ajouter une vraie photo : remplacez data-img="images/votre-photo.jpg" et ajoutez l'image dans le dossier images/ -->
-      <div class="shot m2" data-img=""><span class="ph">Photo à venir</span><span class="cap">Séjour — béton ciré</span></div>
-      <div class="shot m1" data-img=""><span class="ph">Photo à venir</span><span class="cap">Cuisine — crédence &amp; plan de travail</span></div>
-      <div class="shot m3" data-img=""><span class="ph">Photo à venir</span><span class="cap">Salle de bain — enduit à la chaux</span></div>
-      <div class="shot m4" data-img=""><span class="ph">Photo à venir</span><span class="cap">Cloisons &amp; doublages</span></div>
-      <div class="shot m5" data-img=""><span class="ph">Photo à venir</span><span class="cap">Plafond décaissé — éclairage LED</span></div>
-      <div class="shot m6" data-img=""><span class="ph">Photo à venir</span><span class="cap">Cage d'escalier — peinture</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px" class="realis-grid">
+      <a href="assets/realisations/cuisine.png" target="_blank"><img loading="lazy" src="assets/realisations/cuisine.png" alt="Cuisine — crédence et plan de travail" style="width:100%;display:block;border-radius:14px;border:1px solid var(--line)"></a>
+      <a href="assets/realisations/sdb-chaux.png" target="_blank"><img loading="lazy" src="assets/realisations/sdb-chaux.png" alt="Salle de bain — enduit à la chaux" style="width:100%;display:block;border-radius:14px;border:1px solid var(--line)"></a>
+      <a href="assets/realisations/cloisons.png" target="_blank"><img loading="lazy" src="assets/realisations/cloisons.png" alt="Cloisons et doublages" style="width:100%;display:block;border-radius:14px;border:1px solid var(--line)"></a>
+      <a href="assets/realisations/plafond-led.png" target="_blank"><img loading="lazy" src="assets/realisations/plafond-led.png" alt="Plafond décaissé — éclairage LED" style="width:100%;display:block;border-radius:14px;border:1px solid var(--line)"></a>
+      <a href="assets/realisations/cage-escalier.png" target="_blank"><img loading="lazy" src="assets/realisations/cage-escalier.png" alt="Cage d'escalier — peinture" style="width:100%;display:block;border-radius:14px;border:1px solid var(--line)"></a>
     </div>
-    <p style="color:var(--stone);font-size:14px;margin-top:18px">Astuce : pour chaque chantier, gardez une photo « avant » et une « après » — c'est ce qui parle le plus aux futurs clients.</p>
-    <div class="btnrow">
-      <a class="btn" href="contact.html">Demander un devis</a>
+    <div class="btnrow" style="margin-top:32px">
+      <a class="btn" href="contact.html">Demander un devis <span class="arr">→</span></a>
     </div>
   </div>
 </section>
 </main>
+
+<style>@media(max-width:560px){.realis-grid{grid-template-columns:1fr!important}}</style>
 
 <!-- Lightbox -->
 <div id="lightbox" role="dialog" aria-modal="true" aria-label="Photo agrandie">
