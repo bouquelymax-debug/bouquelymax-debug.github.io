@@ -428,7 +428,9 @@ function remplirClient() {
 }
 
 // Affiche le statut fidélité du client et propose d'appliquer la remise
+const FIDELITE_ON = false;   // ← mettre true pour réactiver la carte de fidélité
 function majFidelite(c) {
+  if (!FIDELITE_ON) { const b = document.getElementById('fidBox'); if (b) b.style.display = 'none'; window.REMISE_FID = 0; if (typeof recalc === 'function') recalc(); return; }
   const n = compterChantiersClient(c);
   const { pct, niveau } = remiseFidelite(n);
   const box = document.getElementById('fidBox');

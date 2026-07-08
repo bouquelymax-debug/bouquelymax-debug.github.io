@@ -118,7 +118,9 @@
   // Centralisation des demandes + accusé de réception automatique
   var _sbLead = (typeof supabase !== 'undefined') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
   // Affiche le bandeau si on arrive via un lien de parrainage
+  var PARRAINAGE_ON = false;   // ← mettre true pour réactiver le parrainage
   (function () {
+    if (!PARRAINAGE_ON) return;
     try {
       var p = new URLSearchParams(location.search).get('parrain');
       if (p) { var el = document.getElementById('parrainNote'); if (el) el.style.display = 'block'; }
@@ -131,7 +133,7 @@
     var prenom = get('prenom'), nom = get('nom'), email = get('email'), tel = get('telephone'), message = get('message');
     // Code de parrainage (présent dans l'URL : ?parrain=...)
     var parrain = '';
-    try { parrain = (new URLSearchParams(location.search).get('parrain') || '').trim(); } catch (e) {}
+    if (PARRAINAGE_ON) { try { parrain = (new URLSearchParams(location.search).get('parrain') || '').trim(); } catch (e) {} }
     // 1) Enregistre la demande dans le tableau de bord (table "leads")
     if (_sbLead) {
       var lead = { prenom: prenom, nom: nom, email: email, telephone: tel, types: types, message: message };

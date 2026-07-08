@@ -218,6 +218,7 @@ function pctParrainage(montant) {
 }
 
 async function chargerParrainage() {
+  if (!PARRAINAGE_ON) { const p = document.getElementById('parrainPanel'); if (p) p.style.display = 'none'; return; }
   if (!chantierData) return;
   const el = document.getElementById('parrainContenu');
   const monEmail = (chantierData.client_email || '').trim();
@@ -282,7 +283,10 @@ function remiseFidelite(n) {
   if (n === 2) return 5;
   return 0;
 }
+const FIDELITE_ON = false;    // ← mettre true pour réactiver la carte de fidélité
+const PARRAINAGE_ON = false;  // ← mettre true pour réactiver le parrainage
 async function chargerFidelite() {
+  if (!FIDELITE_ON) { const p = document.getElementById('fidPanel'); if (p) p.style.display = 'none'; return; }
   if (!chantierData) return;
   const email = (chantierData.client_email || '').trim();
   const nom = (chantierData.client_nom || '').trim();
