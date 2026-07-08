@@ -10,13 +10,57 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <style>
-    #lightbox{display:none;position:fixed;inset:0;background:rgba(30,33,39,.92);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+    /* ---- En-tête éditorial ---- */
+    .real-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:26px;flex-wrap:wrap}
+    .real-stats{display:flex;gap:26px;padding-bottom:8px}
+    .real-stats .st{text-align:right}
+    .real-stats .st b{display:block;font-family:"Space Grotesk";font-size:26px;font-weight:700;letter-spacing:-.02em;background:linear-gradient(100deg,#8a7a5c,#c2ad85);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .real-stats .st span{font-family:"Space Mono";font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone)}
+
+    /* ---- Photo à la une ---- */
+    .feat{position:relative;border-radius:22px;overflow:hidden;box-shadow:var(--shadow-m);cursor:zoom-in}
+    .feat img{width:100%;display:block;aspect-ratio:16/8.2;object-fit:cover;transition:transform 1.2s cubic-bezier(.22,.68,.4,1)}
+    .feat:hover img{transform:scale(1.03)}
+    .feat::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(18,20,24,.55) 0%,transparent 42%)}
+    .feat-cap{position:absolute;left:26px;bottom:22px;z-index:2;color:#fff}
+    .feat-cap .no{font-family:"Space Mono";font-size:10px;letter-spacing:.22em;color:#d8c9a8;text-transform:uppercase;display:block;margin-bottom:6px}
+    .feat-cap h3{font-family:"Space Grotesk";font-weight:600;font-size:clamp(18px,2.6vw,26px);letter-spacing:-.01em;margin:0}
+    .feat-cap p{font-family:"Space Mono";font-size:10.5px;letter-spacing:.08em;color:rgba(255,255,255,.75);text-transform:uppercase;margin:6px 0 0}
+    .feat .agrandir{position:absolute;top:18px;right:18px;z-index:2;font-family:"Space Mono";font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:100px;padding:6px 12px;backdrop-filter:blur(6px);background:rgba(18,20,24,.25)}
+
+    /* ---- Planches de la galerie ---- */
+    .plates{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+    .plate{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow-s);transition:transform .35s cubic-bezier(.22,.68,.4,1),box-shadow .35s ease;cursor:zoom-in}
+    .plate:hover{transform:translateY(-5px);box-shadow:var(--shadow-m)}
+    .plate .im{overflow:hidden}
+    .plate img{width:100%;display:block;transition:transform 1s cubic-bezier(.22,.68,.4,1)}
+    .plate:hover img{transform:scale(1.04)}
+    .plate .meta{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px}
+    .plate .meta .no{font-family:"Space Mono";font-size:10px;letter-spacing:.18em;color:var(--sand)}
+    .plate .meta .lbl{flex:1;font-family:"Hanken Grotesk";font-size:13.5px;color:var(--ink2)}
+    .plate .meta .arr{font-family:"Space Mono";font-size:12px;color:var(--stone);transition:transform .3s ease,color .3s}
+    .plate:hover .meta .arr{transform:translateX(4px);color:var(--ink)}
+
+    /* ---- Bande CTA ---- */
+    .real-cta{background:var(--ink);border-radius:22px;padding:clamp(30px,5vw,52px);display:flex;align-items:center;justify-content:space-between;gap:22px;flex-wrap:wrap}
+    .real-cta h2{color:#fff;font-family:"Space Grotesk";font-weight:600;font-size:clamp(20px,3vw,30px);letter-spacing:-.02em;margin:0}
+    .real-cta p{color:rgba(255,255,255,.65);font-size:14.5px;margin:8px 0 0;max-width:480px}
+    .real-cta .btn{background:#fff;color:var(--ink);border-color:#fff;flex:none}
+
+    /* ---- Lightbox ---- */
+    #lightbox{display:none;position:fixed;inset:0;background:rgba(18,20,24,.94);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:20px}
     #lightbox.open{display:flex}
-    #lightbox img{max-width:90vw;max-height:80vh;border-radius:12px;object-fit:contain}
-    .lb-close{position:absolute;top:20px;right:28px;font-size:32px;color:#fff;cursor:pointer;background:none;border:none;line-height:1}
-    .lb-cap{font-family:"Space Mono";font-size:12px;letter-spacing:.08em;color:rgba(255,255,255,.7);text-transform:uppercase}
-    .shot[data-img]{cursor:pointer}
-    .shot[data-img]:hover .cap{background:rgba(30,33,39,.75)}
+    #lightbox img{max-width:92vw;max-height:82vh;border-radius:12px;object-fit:contain;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+    .lb-close{position:absolute;top:18px;right:24px;font-size:34px;color:#fff;cursor:pointer;background:none;border:none;line-height:1;opacity:.8}
+    .lb-close:hover{opacity:1}
+    .lb-cap{font-family:"Space Mono";font-size:11px;letter-spacing:.12em;color:rgba(255,255,255,.65);text-transform:uppercase}
+
+    @media(max-width:720px){
+      .plates{grid-template-columns:1fr}
+      .real-stats{gap:18px}
+      .feat img{aspect-ratio:4/3}
+      .feat-cap{left:16px;bottom:14px}
+    }
   </style>
 </head>
 <body>
@@ -37,42 +81,82 @@
 <main>
 <section class="section-plaster">
   <div class="wrap">
-    <span class="eyebrow">Réalisations</span>
-    <h1 style="margin-top:12px">Nos chantiers.</h1>
-    <div class="swipe"></div>
-    <p class="lead">Enduits à la chaux, béton ciré, plâtrerie et finitions soignées, réalisés à Nevers et dans un rayon de 50 km.</p>
-  </div>
-</section>
-
-<!-- Réalisation à la une -->
-<section style="padding-top:0">
-  <div class="wrap">
-    <div class="shot" data-img="assets/realisations/salle-de-bain.png" style="aspect-ratio:16/9;min-height:280px;width:100%">
-      <span class="ph">Photo</span>
-      <span class="cap">Salle de bain — murs enduits à la chaux</span>
+    <div class="real-hero">
+      <div>
+        <span class="eyebrow">Réalisations</span>
+        <h1 style="margin-top:12px">La matière,<br>en vrai.</h1>
+        <div class="swipe"></div>
+        <p class="lead">Enduits à la chaux, plâtrerie, plafonds et finitions soignées — posés chez nos clients, à Nevers et dans un rayon de 50 km.</p>
+      </div>
+      <div class="real-stats">
+        <div class="st"><b>6</b><span>Réalisations</span></div>
+        <div class="st"><b>50 km</b><span>Autour de Nevers</span></div>
+        <div class="st"><b>100 %</b><span>Fait main</span></div>
+      </div>
     </div>
   </div>
 </section>
 
+<!-- À la une -->
 <section style="padding-top:0">
   <div class="wrap">
-    <span class="eyebrow">Galerie</span>
-    <h2 style="margin:10px 0 24px">Nos finitions.</h2>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px" class="realis-grid">
-      <a href="assets/realisations/cuisine.png" target="_blank"><img loading="lazy" src="assets/realisations/cuisine.png" alt="Cuisine — crédence et plan de travail" style="width:100%;display:block;border-radius:14px;border:1px solid var(--line)"></a>
-      <a href="assets/realisations/sdb-chaux.png" target="_blank"><img loading="lazy" src="assets/realisations/sdb-chaux.png" alt="Salle de bain — enduit à la chaux" style="width:100%;display:block;border-radius:14px;border:1px solid var(--line)"></a>
-      <a href="assets/realisations/cloisons.png" target="_blank"><img loading="lazy" src="assets/realisations/cloisons.png" alt="Cloisons et doublages" style="width:100%;display:block;border-radius:14px;border:1px solid var(--line)"></a>
-      <a href="assets/realisations/plafond-led.png" target="_blank"><img loading="lazy" src="assets/realisations/plafond-led.png" alt="Plafond décaissé — éclairage LED" style="width:100%;display:block;border-radius:14px;border:1px solid var(--line)"></a>
-      <a href="assets/realisations/cage-escalier.png" target="_blank"><img loading="lazy" src="assets/realisations/cage-escalier.png" alt="Cage d'escalier — peinture" style="width:100%;display:block;border-radius:14px;border:1px solid var(--line)"></a>
+    <figure class="feat" data-full="assets/realisations/salle-de-bain.png" data-cap="Salle de bain — enduits à la chaux" style="margin:0">
+      <img src="assets/realisations/salle-de-bain.png" alt="Salle de bain aux murs enduits à la chaux, baignoire îlot">
+      <span class="agrandir">Agrandir +</span>
+      <figcaption class="feat-cap">
+        <span class="no">À la une — 01</span>
+        <h3>Salle de bain, enduits à la chaux</h3>
+        <p>Murs minéraux · lumière naturelle · finition velours</p>
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- Galerie -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head" style="margin-bottom:26px">
+      <span class="eyebrow">Galerie</span>
+      <h2>Chaque finition raconte un savoir-faire.</h2>
     </div>
-    <div class="btnrow" style="margin-top:32px">
+    <div class="plates">
+      <div class="plate" data-full="assets/realisations/cuisine.png" data-cap="Cuisine — crédence & plan de travail">
+        <div class="im"><img loading="lazy" src="assets/realisations/cuisine.png" alt="Cuisine — crédence zellige et plan de travail quartz"></div>
+        <div class="meta"><span class="no">02</span><span class="lbl">Crédence zellige &amp; plan quartz — pose et finitions</span><span class="arr">→</span></div>
+      </div>
+      <div class="plate" data-full="assets/realisations/sdb-chaux.png" data-cap="Salle de bain — enduit à la chaux">
+        <div class="im"><img loading="lazy" src="assets/realisations/sdb-chaux.png" alt="Salle d'eau aux murs en enduit à la chaux"></div>
+        <div class="meta"><span class="no">03</span><span class="lbl">Enduit à la chaux — matière brute, rendu doux</span><span class="arr">→</span></div>
+      </div>
+      <div class="plate" data-full="assets/realisations/cloisons.png" data-cap="Cloisons & doublages">
+        <div class="im"><img loading="lazy" src="assets/realisations/cloisons.png" alt="Cloison en cours de montage avec isolation en laine de roche"></div>
+        <div class="meta"><span class="no">04</span><span class="lbl">Cloisons &amp; doublages isolés — l'envers du décor</span><span class="arr">→</span></div>
+      </div>
+      <div class="plate" data-full="assets/realisations/plafond-led.png" data-cap="Plafond décaissé — éclairage LED">
+        <div class="im"><img loading="lazy" src="assets/realisations/plafond-led.png" alt="Plafond décaissé avec éclairage LED indirect"></div>
+        <div class="meta"><span class="no">05</span><span class="lbl">Plafond décaissé — lumière LED indirecte</span><span class="arr">→</span></div>
+      </div>
+      <div class="plate" data-full="assets/realisations/cage-escalier.png" data-cap="Cage d'escalier — peinture">
+        <div class="im"><img loading="lazy" src="assets/realisations/cage-escalier.png" alt="Cage d'escalier repeinte, finition soignée"></div>
+        <div class="meta"><span class="no">06</span><span class="lbl">Cage d'escalier — préparation et peinture</span><span class="arr">→</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Appel à projet -->
+<section style="padding-top:10px">
+  <div class="wrap">
+    <div class="real-cta">
+      <div>
+        <h2>Votre intérieur mérite cette finition.</h2>
+        <p>Devis gratuit, conseils matière inclus. Nous nous déplaçons à Nevers et jusqu'à 50 km alentour.</p>
+      </div>
       <a class="btn" href="contact.html">Demander un devis <span class="arr">→</span></a>
     </div>
   </div>
 </section>
 </main>
-
-<style>@media(max-width:560px){.realis-grid{grid-template-columns:1fr!important}}</style>
 
 <!-- Lightbox -->
 <div id="lightbox" role="dialog" aria-modal="true" aria-label="Photo agrandie">
@@ -105,6 +189,24 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 <script src="js/main.js"></script>
 <script src="js/animations.js"></script>
+<script>
+  // Lightbox : clic sur une planche ou la photo à la une → plein écran
+  (function () {
+    var lb = document.getElementById('lightbox');
+    if (!lb) return;
+    var img = lb.querySelector('img'), cap = lb.querySelector('.lb-cap');
+    document.querySelectorAll('[data-full]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        img.src = el.getAttribute('data-full');
+        cap.textContent = el.getAttribute('data-cap') || '';
+        lb.classList.add('open');
+      });
+    });
+    function fermer(){ lb.classList.remove('open'); img.src=''; }
+    lb.addEventListener('click', function(e){ if (e.target === lb || e.target.classList.contains('lb-close')) fermer(); });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape') fermer(); });
+  })();
+</script>
 </body>
 </html>
 
