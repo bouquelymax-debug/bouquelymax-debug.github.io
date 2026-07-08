@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+# L'espace admin n'a pas vocation à être référencé
+Disallow: /admin/
+
+Sitemap: https://bouquelymax-debug.github.io/sitemap.xml
