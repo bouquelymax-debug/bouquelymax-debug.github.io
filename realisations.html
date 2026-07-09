@@ -11,12 +11,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <style>
-    /* ---- En-tête éditorial ---- */
-    .real-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:26px;flex-wrap:wrap}
-    .real-stats{display:flex;gap:26px;padding-bottom:8px}
-    .real-stats .st{text-align:right}
+    /* ---- En-tête éditorial avec bande inclinée ---- */
+    .real-hero{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;overflow:visible}
+    .real-title{font-family:"Playfair Display",Georgia,serif;font-weight:500;text-transform:uppercase;font-size:clamp(38px,5.6vw,84px);line-height:1.02;letter-spacing:.01em;margin:18px 0 0}
+    .real-stats{display:flex;gap:26px;margin-top:26px}
     .real-stats .st b{display:block;font-family:"Space Grotesk";font-size:26px;font-weight:700;letter-spacing:-.02em;background:linear-gradient(100deg,#8a7a5c,#c2ad85);-webkit-background-clip:text;background-clip:text;color:transparent}
     .real-stats .st span{font-family:"Space Mono";font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone)}
+
+    /* Bande de photos inclinée, animée au défilement */
+    .tilt-zone{position:relative;min-height:420px}
+    .tilt{position:absolute;top:50%;left:-6%;width:140%;transform:translateY(-50%) rotate(-8deg)}
+    .tilt-track{display:flex;gap:18px;will-change:transform}
+    .tilt-track img{height:300px;width:auto;border-radius:10px;box-shadow:0 24px 60px rgba(21,23,27,.18);flex:none}
+    /* fine ligne diagonale décorative */
+    .real-hero::after{content:"";position:absolute;right:-10%;top:-30%;width:60%;height:1px;background:var(--ink);opacity:.35;transform:rotate(-32deg);transform-origin:right;pointer-events:none}
+    section.section-plaster{overflow:hidden}
 
     /* ---- Photo à la une ---- */
     .feat{position:relative;border-radius:22px;overflow:hidden;box-shadow:var(--shadow-m);cursor:zoom-in}
@@ -61,6 +70,11 @@
       .real-stats{gap:18px}
       .feat img{aspect-ratio:4/3}
       .feat-cap{left:16px;bottom:14px}
+      .real-hero{grid-template-columns:1fr;gap:10px}
+      .tilt-zone{min-height:230px}
+      .tilt{left:-14%;width:170%}
+      .tilt-track img{height:150px}
+      .real-hero::after{display:none}
     }
   </style>
 </head>
@@ -85,14 +99,24 @@
     <div class="real-hero">
       <div>
         <span class="eyebrow">Réalisations</span>
-        <h1 style="margin-top:12px">La matière,<br>en vrai.</h1>
-        <div class="swipe"></div>
-        <p class="lead">Enduits à la chaux, plâtrerie, plafonds et finitions soignées — posés chez nos clients, à Nevers et dans un rayon de 50 km.</p>
+        <h1 class="real-title">Nos plus<br>belles<br>réalisations</h1>
+        <p class="lead" style="margin-top:22px">Enduits à la chaux, plâtrerie, plafonds et finitions soignées — posés chez nos clients, à Nevers et dans un rayon de 50 km.</p>
+        <div class="real-stats">
+          <div class="st"><b>6</b><span>Réalisations</span></div>
+          <div class="st"><b>50 km</b><span>Autour de Nevers</span></div>
+          <div class="st"><b>100 %</b><span>Fait main</span></div>
+        </div>
       </div>
-      <div class="real-stats">
-        <div class="st"><b>6</b><span>Réalisations</span></div>
-        <div class="st"><b>50 km</b><span>Autour de Nevers</span></div>
-        <div class="st"><b>100 %</b><span>Fait main</span></div>
+      <div class="tilt-zone" aria-hidden="true">
+        <div class="tilt">
+          <div class="tilt-track">
+            <img src="assets/realisations/salle-de-bain.png" alt="">
+            <img src="assets/realisations/cuisine.png" alt="">
+            <img src="assets/realisations/sdb-chaux.png" alt="">
+            <img src="assets/realisations/plafond-led.png" alt="">
+            <img src="assets/realisations/cage-escalier.png" alt="">
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -191,6 +215,25 @@
 <script src="js/main.js"></script>
 <script src="js/animations.js"></script>
 <script>
+  // Bande inclinée : glisse au défilement (l'effet signature)
+  (function () {
+    if (typeof gsap === 'undefined') return;
+    gsap.registerPlugin(ScrollTrigger);
+    var track = document.querySelector('.tilt-track');
+    if (!track) return;
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) return;
+    // Entrée : les photos arrivent en cascade
+    gsap.from(track.children, { autoAlpha: 0, x: 90, duration: 1.1, ease: 'power3.out', stagger: 0.12 });
+    // Défilement : la bande glisse vers la gauche pendant qu'on descend la page
+    gsap.fromTo(track, { x: 60 }, {
+      x: function () { return -(track.scrollWidth - track.parentElement.parentElement.offsetWidth) * 0.55; },
+      ease: 'none',
+      scrollTrigger: { trigger: '.real-hero', start: 'top bottom', end: '+=1400', scrub: 1.1 }
+    });
+    window.addEventListener('load', function () { ScrollTrigger.refresh(); });
+  })();
+
   // Lightbox : clic sur une planche ou la photo à la une → plein écran
   (function () {
     var lb = document.getElementById('lightbox');
