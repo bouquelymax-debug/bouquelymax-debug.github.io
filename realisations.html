@@ -26,14 +26,13 @@
     .ring-head .eyebrow{justify-content:center}
     .ring-head h2{margin-top:8px}
     .ring-hint{font-family:"Space Mono";font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--stone);margin-top:10px}
-    .ring-stage{position:relative;width:280px;height:380px;perspective:1600px}
+    .ring-stage{position:relative;width:440px;height:189px;perspective:1800px}
     .ring{position:absolute;inset:0;transform-style:preserve-3d;will-change:transform}
-    .ring-card{position:absolute;inset:0;border-radius:14px;overflow:hidden;box-shadow:0 30px 70px rgba(21,23,27,.28);border:1px solid rgba(21,23,27,.1);backface-visibility:hidden;will-change:transform,opacity}
+    .ring-card{position:absolute;inset:0;border-radius:12px;overflow:hidden;box-shadow:0 26px 60px rgba(21,23,27,.32);border:1px solid rgba(21,23,27,.12);background:#fff;backface-visibility:hidden;will-change:transform,opacity}
     .ring-card img{width:100%;height:100%;object-fit:cover;display:block}
-    .ring-card figcaption{position:absolute;left:0;right:0;bottom:0;padding:16px 14px;color:#fff;font-family:"Space Mono";font-size:10px;letter-spacing:.06em;text-transform:uppercase;background:linear-gradient(to top,rgba(18,20,24,.8),transparent)}
     section.section-plaster{overflow:hidden}
-    @media(max-width:640px){.ring-stage{width:210px;height:290px}.ring-sec{height:280vh}}
-    @media(prefers-reduced-motion:reduce){.ring-sec{height:auto}.ring-sticky{position:static;height:auto;padding:60px 0}.ring{position:relative;transform:none!important}.ring-card{position:relative;inset:auto;margin:0 auto 16px;width:280px;height:360px;transform:none!important;opacity:1!important}}
+    @media(max-width:640px){.ring-stage{width:300px;height:129px}.ring-sec{height:250vh}}
+    @media(prefers-reduced-motion:reduce){.ring-sec{height:auto}.ring-sticky{position:static;height:auto;padding:60px 0}.ring{position:relative;transform:none!important}.ring-card{position:relative;inset:auto;margin:0 auto 16px;width:min(440px,90vw);height:auto;aspect-ratio:880/377;transform:none!important;opacity:1!important}}
 
     /* ---- Photo à la une ---- */
     .feat{position:relative;border-radius:22px;overflow:hidden;box-shadow:var(--shadow-m);cursor:zoom-in}
@@ -42,7 +41,7 @@
     .feat::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(18,20,24,.55) 0%,transparent 42%)}
     .feat-cap{position:absolute;left:26px;bottom:22px;z-index:2;color:#fff}
     .feat-cap .no{font-family:"Space Mono";font-size:10px;letter-spacing:.22em;color:#d8c9a8;text-transform:uppercase;display:block;margin-bottom:6px}
-    .feat-cap h3{font-family:"Space Grotesk";font-weight:600;font-size:clamp(18px,2.6vw,26px);letter-spacing:-.01em;margin:0}
+    .feat-cap h3{font-family:"Playfair Display",Georgia,serif;font-weight:500;font-size:clamp(20px,2.8vw,30px);letter-spacing:0;margin:0}
     .feat-cap p{font-family:"Space Mono";font-size:10.5px;letter-spacing:.08em;color:rgba(255,255,255,.75);text-transform:uppercase;margin:6px 0 0}
     .feat .agrandir{position:absolute;top:18px;right:18px;z-index:2;font-family:"Space Mono";font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:100px;padding:6px 12px;backdrop-filter:blur(6px);background:rgba(18,20,24,.25)}
 
@@ -120,12 +119,11 @@
     </div>
     <div class="ring-stage">
       <div class="ring" id="ring">
-        <figure class="ring-card" data-full="assets/realisations/salle-de-bain.png"><img src="assets/realisations/salle-de-bain.png" alt="Salle de bain — enduits à la chaux"><figcaption>Salle de bain — chaux</figcaption></figure>
-        <figure class="ring-card" data-full="assets/realisations/cuisine.png"><img src="assets/realisations/cuisine.png" alt="Cuisine — crédence et plan de travail"><figcaption>Cuisine — crédence</figcaption></figure>
-        <figure class="ring-card" data-full="assets/realisations/sdb-chaux.png"><img src="assets/realisations/sdb-chaux.png" alt="Salle d'eau — enduit à la chaux"><figcaption>Salle d'eau — chaux</figcaption></figure>
-        <figure class="ring-card" data-full="assets/realisations/cloisons.png"><img src="assets/realisations/cloisons.png" alt="Cloisons et doublages"><figcaption>Cloisons &amp; doublages</figcaption></figure>
-        <figure class="ring-card" data-full="assets/realisations/plafond-led.png"><img src="assets/realisations/plafond-led.png" alt="Plafond décaissé — LED"><figcaption>Plafond — LED</figcaption></figure>
-        <figure class="ring-card" data-full="assets/realisations/cage-escalier.png"><img src="assets/realisations/cage-escalier.png" alt="Cage d'escalier — peinture"><figcaption>Escalier — peinture</figcaption></figure>
+        <figure class="ring-card" data-full="assets/realisations/cuisine.png"><img src="assets/realisations/cuisine.png" alt="Cuisine — crédence et plan de travail"></figure>
+        <figure class="ring-card" data-full="assets/realisations/sdb-chaux.png"><img src="assets/realisations/sdb-chaux.png" alt="Salle d'eau — enduit à la chaux"></figure>
+        <figure class="ring-card" data-full="assets/realisations/cloisons.png"><img src="assets/realisations/cloisons.png" alt="Cloisons et doublages"></figure>
+        <figure class="ring-card" data-full="assets/realisations/plafond-led.png"><img src="assets/realisations/plafond-led.png" alt="Plafond décaissé — LED"></figure>
+        <figure class="ring-card" data-full="assets/realisations/cage-escalier.png"><img src="assets/realisations/cage-escalier.png" alt="Cage d'escalier — peinture"></figure>
       </div>
     </div>
   </div>
