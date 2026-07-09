@@ -11,21 +11,29 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <style>
-    /* ---- En-tête éditorial avec bande inclinée ---- */
-    .real-hero{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;overflow:visible}
+    /* overflow-x:hidden casse position:sticky → on passe en clip (même anti-scroll, sticky OK) */
+    html,body{overflow-x:clip}
+    /* ---- En-tête éditorial ---- */
     .real-title{font-family:"Playfair Display",Georgia,serif;font-weight:500;text-transform:uppercase;font-size:clamp(38px,5.6vw,84px);line-height:1.02;letter-spacing:.01em;margin:18px 0 0}
     .real-stats{display:flex;gap:26px;margin-top:26px}
     .real-stats .st b{display:block;font-family:"Space Grotesk";font-size:26px;font-weight:700;letter-spacing:-.02em;background:linear-gradient(100deg,#8a7a5c,#c2ad85);-webkit-background-clip:text;background-clip:text;color:transparent}
     .real-stats .st span{font-family:"Space Mono";font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone)}
 
-    /* Bande de photos inclinée, animée au défilement */
-    .tilt-zone{position:relative;min-height:420px}
-    .tilt{position:absolute;top:50%;left:-6%;width:140%;transform:translateY(-50%) rotate(-8deg)}
-    .tilt-track{display:flex;gap:18px;will-change:transform}
-    .tilt-track img{height:300px;width:auto;border-radius:10px;box-shadow:0 24px 60px rgba(21,23,27,.18);flex:none}
-    /* fine ligne diagonale décorative */
-    .real-hero::after{content:"";position:absolute;right:-10%;top:-30%;width:60%;height:1px;background:var(--ink);opacity:.35;transform:rotate(-32deg);transform-origin:right;pointer-events:none}
+    /* ---- Galerie 3D circulaire qui pivote au défilement ---- */
+    .ring-sec{position:relative;height:320vh;background:var(--plaster);background-image:radial-gradient(circle at 1px 1px,rgba(21,23,27,.045) 1px,transparent 0);background-size:22px 22px}
+    .ring-sticky{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .ring-head{position:absolute;top:70px;left:0;right:0;text-align:center;z-index:5;pointer-events:none}
+    .ring-head .eyebrow{justify-content:center}
+    .ring-head h2{margin-top:8px}
+    .ring-hint{font-family:"Space Mono";font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--stone);margin-top:10px}
+    .ring-stage{position:relative;width:280px;height:380px;perspective:1600px}
+    .ring{position:absolute;inset:0;transform-style:preserve-3d;will-change:transform}
+    .ring-card{position:absolute;inset:0;border-radius:14px;overflow:hidden;box-shadow:0 30px 70px rgba(21,23,27,.28);border:1px solid rgba(21,23,27,.1);backface-visibility:hidden;will-change:transform,opacity}
+    .ring-card img{width:100%;height:100%;object-fit:cover;display:block}
+    .ring-card figcaption{position:absolute;left:0;right:0;bottom:0;padding:16px 14px;color:#fff;font-family:"Space Mono";font-size:10px;letter-spacing:.06em;text-transform:uppercase;background:linear-gradient(to top,rgba(18,20,24,.8),transparent)}
     section.section-plaster{overflow:hidden}
+    @media(max-width:640px){.ring-stage{width:210px;height:290px}.ring-sec{height:280vh}}
+    @media(prefers-reduced-motion:reduce){.ring-sec{height:auto}.ring-sticky{position:static;height:auto;padding:60px 0}.ring{position:relative;transform:none!important}.ring-card{position:relative;inset:auto;margin:0 auto 16px;width:280px;height:360px;transform:none!important;opacity:1!important}}
 
     /* ---- Photo à la une ---- */
     .feat{position:relative;border-radius:22px;overflow:hidden;box-shadow:var(--shadow-m);cursor:zoom-in}
@@ -70,11 +78,6 @@
       .real-stats{gap:18px}
       .feat img{aspect-ratio:4/3}
       .feat-cap{left:16px;bottom:14px}
-      .real-hero{grid-template-columns:1fr;gap:10px}
-      .tilt-zone{min-height:230px}
-      .tilt{left:-14%;width:170%}
-      .tilt-track img{height:150px}
-      .real-hero::after{display:none}
     }
   </style>
 </head>
@@ -94,29 +97,35 @@
 </header>
 
 <main>
-<section class="section-plaster">
+<section class="section-plaster" style="padding-bottom:60px">
   <div class="wrap">
-    <div class="real-hero">
-      <div>
-        <span class="eyebrow">Réalisations</span>
-        <h1 class="real-title">Nos plus<br>belles<br>réalisations</h1>
-        <p class="lead" style="margin-top:22px">Enduits à la chaux, plâtrerie, plafonds et finitions soignées — posés chez nos clients, à Nevers et dans un rayon de 50 km.</p>
-        <div class="real-stats">
-          <div class="st"><b>6</b><span>Réalisations</span></div>
-          <div class="st"><b>50 km</b><span>Autour de Nevers</span></div>
-          <div class="st"><b>100 %</b><span>Fait main</span></div>
-        </div>
-      </div>
-      <div class="tilt-zone" aria-hidden="true">
-        <div class="tilt">
-          <div class="tilt-track">
-            <img src="assets/realisations/salle-de-bain.png" alt="">
-            <img src="assets/realisations/cuisine.png" alt="">
-            <img src="assets/realisations/sdb-chaux.png" alt="">
-            <img src="assets/realisations/plafond-led.png" alt="">
-            <img src="assets/realisations/cage-escalier.png" alt="">
-          </div>
-        </div>
+    <span class="eyebrow">Réalisations</span>
+    <h1 class="real-title">Nos plus<br>belles<br>réalisations</h1>
+    <p class="lead" style="margin-top:22px">Enduits à la chaux, plâtrerie, plafonds et finitions soignées — posés chez nos clients, à Nevers et dans un rayon de 50 km.</p>
+    <div class="real-stats">
+      <div class="st"><b>6</b><span>Réalisations</span></div>
+      <div class="st"><b>50 km</b><span>Autour de Nevers</span></div>
+      <div class="st"><b>100 %</b><span>Fait main</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Galerie 3D circulaire : tourne au défilement -->
+<section class="ring-sec" aria-label="Galerie en rotation">
+  <div class="ring-sticky">
+    <div class="ring-head">
+      <span class="eyebrow">Galerie 360°</span>
+      <h2>Faites tourner nos finitions.</h2>
+      <div class="ring-hint">↕ Défilez pour faire pivoter</div>
+    </div>
+    <div class="ring-stage">
+      <div class="ring" id="ring">
+        <figure class="ring-card" data-full="assets/realisations/salle-de-bain.png"><img src="assets/realisations/salle-de-bain.png" alt="Salle de bain — enduits à la chaux"><figcaption>Salle de bain — chaux</figcaption></figure>
+        <figure class="ring-card" data-full="assets/realisations/cuisine.png"><img src="assets/realisations/cuisine.png" alt="Cuisine — crédence et plan de travail"><figcaption>Cuisine — crédence</figcaption></figure>
+        <figure class="ring-card" data-full="assets/realisations/sdb-chaux.png"><img src="assets/realisations/sdb-chaux.png" alt="Salle d'eau — enduit à la chaux"><figcaption>Salle d'eau — chaux</figcaption></figure>
+        <figure class="ring-card" data-full="assets/realisations/cloisons.png"><img src="assets/realisations/cloisons.png" alt="Cloisons et doublages"><figcaption>Cloisons &amp; doublages</figcaption></figure>
+        <figure class="ring-card" data-full="assets/realisations/plafond-led.png"><img src="assets/realisations/plafond-led.png" alt="Plafond décaissé — LED"><figcaption>Plafond — LED</figcaption></figure>
+        <figure class="ring-card" data-full="assets/realisations/cage-escalier.png"><img src="assets/realisations/cage-escalier.png" alt="Cage d'escalier — peinture"><figcaption>Escalier — peinture</figcaption></figure>
       </div>
     </div>
   </div>
@@ -215,23 +224,61 @@
 <script src="js/main.js"></script>
 <script src="js/animations.js"></script>
 <script>
-  // Bande inclinée : glisse au défilement (l'effet signature)
+  // Galerie 3D circulaire : les cartes forment un anneau qui pivote au défilement
   (function () {
-    if (typeof gsap === 'undefined') return;
-    gsap.registerPlugin(ScrollTrigger);
-    var track = document.querySelector('.tilt-track');
-    if (!track) return;
-    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) return;
-    // Entrée : les photos arrivent en cascade
-    gsap.from(track.children, { autoAlpha: 0, x: 90, duration: 1.1, ease: 'power3.out', stagger: 0.12 });
-    // Défilement : la bande glisse vers la gauche pendant qu'on descend la page
-    gsap.fromTo(track, { x: 60 }, {
-      x: function () { return -(track.scrollWidth - track.parentElement.parentElement.offsetWidth) * 0.55; },
-      ease: 'none',
-      scrollTrigger: { trigger: '.real-hero', start: 'top bottom', end: '+=1400', scrub: 1.1 }
-    });
-    window.addEventListener('load', function () { ScrollTrigger.refresh(); });
+    var ring = document.getElementById('ring');
+    var sec = document.querySelector('.ring-sec');
+    if (!ring || !sec) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // CSS gère un rendu empilé
+
+    var cards = Array.prototype.slice.call(ring.children);
+    var n = cards.length;
+    var step = 360 / n;
+
+    // Rayon adapté à la taille des cartes (assez grand pour ne pas se chevaucher)
+    function radius() { return Math.max(300, (ring.offsetWidth / 2) / Math.tan(Math.PI / n) + 60); }
+
+    // Place chaque carte sur l'anneau
+    function placer() {
+      var r = radius();
+      cards.forEach(function (c, i) {
+        c.style.transform = 'rotateY(' + (i * step) + 'deg) translateZ(' + r + 'px)';
+      });
+    }
+    placer();
+    window.addEventListener('resize', placer);
+
+    var rotation = 0;      // angle courant de l'anneau
+    var target = 0;        // angle visé (défini par le scroll)
+    var auto = 0.06;       // légère rotation continue au repos
+    var idle = 0;          // compteur d'inactivité du scroll
+
+    function onScroll() {
+      var rect = sec.getBoundingClientRect();
+      var total = sec.offsetHeight - window.innerHeight;
+      // progression 0→1 pendant que la section défile sous la fenêtre
+      var p = total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 0;
+      target = p * 360 * 1.15;   // un peu plus d'un tour complet sur toute la section
+      idle = 0;
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    // Boucle de rendu : lissage vers la cible + auto-rotation quand on ne scrolle pas
+    function tick() {
+      idle++;
+      if (idle > 8) target += auto;          // au repos, l'anneau continue doucement
+      rotation += (target - rotation) * 0.08; // easing doux vers la cible
+      // profondeur : les cartes de dos s'estompent
+      ring.style.transform = 'translateZ(-' + radius() + 'px) rotateY(' + rotation + 'deg)';
+      cards.forEach(function (c, i) {
+        var a = ((i * step + rotation) % 360 + 360) % 360;
+        var front = Math.abs(a > 180 ? 360 - a : a);   // 0 = face à nous, 180 = derrière
+        c.style.opacity = Math.max(0.28, 1 - front / 200).toFixed(3);
+      });
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
   })();
 
   // Lightbox : clic sur une planche ou la photo à la une → plein écran
