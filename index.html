@@ -40,6 +40,27 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    html,body{overflow-x:clip}
+    /* ---- Ouvreur : la photo grandit au défilement ---- */
+    .xhero{position:relative;height:240vh}
+    .xhero-sticky{position:sticky;top:0;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--ink)}
+    .xhero-bg{position:absolute;inset:0;background-size:cover;background-position:center;transform:scale(1.1);will-change:opacity,transform}
+    .xhero-bg::after{content:"";position:absolute;inset:0;background:rgba(18,20,24,.55)}
+    .xhero-media{position:relative;z-index:2;background-size:cover;background-position:center;border-radius:16px;box-shadow:0 40px 100px rgba(0,0,0,.5);will-change:width,height,border-radius}
+    .xhero-words{position:absolute;z-index:3;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:0;pointer-events:none;white-space:nowrap;mix-blend-mode:difference}
+    .xhero-words span{font-family:"Playfair Display",Georgia,serif;font-weight:600;color:#fff;font-size:clamp(40px,10vw,150px);line-height:1;letter-spacing:.01em;will-change:transform}
+    .xhero-hint{position:absolute;z-index:3;bottom:40px;left:0;right:0;text-align:center;color:#fff;font-family:"Space Mono";font-size:11px;letter-spacing:.22em;text-transform:uppercase;will-change:opacity}
+    .xhero-hint .dot{display:block;width:24px;height:38px;border:1px solid rgba(255,255,255,.6);border-radius:14px;margin:0 auto 12px;position:relative}
+    .xhero-hint .dot::before{content:"";position:absolute;left:50%;top:8px;width:3px;height:7px;border-radius:2px;background:#fff;transform:translateX(-50%);animation:xh-scroll 1.5s ease-in-out infinite}
+    @keyframes xh-scroll{0%{opacity:0;transform:translate(-50%,0)}40%{opacity:1}100%{opacity:0;transform:translate(-50%,12px)}}
+    .xhero-caption{position:absolute;z-index:3;left:50%;bottom:30px;transform:translateX(-50%);color:#fff;font-family:"Space Mono";font-size:11px;letter-spacing:.14em;text-transform:uppercase;background:rgba(18,20,24,.5);padding:8px 14px;border-radius:8px;opacity:0}
+    @media(prefers-reduced-motion:reduce){
+      .xhero{height:auto}.xhero-sticky{position:static;height:auto;min-height:70vh}
+      .xhero-media{width:100%!important;height:70vh!important;border-radius:0!important}
+      .xhero-words span{font-size:clamp(32px,8vw,90px)}
+    }
+  </style>
 </head>
 <body><header class="nav">
   <a class="brand" href="index.html"><img class="brand-logo" src="assets/logo.svg" alt="" onerror="this.remove()"><span class="brand-wrap">Maison Matière<span class="brand-sub">Plâtrerie &amp; finitions</span></span></a>
@@ -53,22 +74,27 @@
     <a href="contact.html" class="cta" data-page="contact.html">Demande de devis</a>
   </nav>
 </header><main>
-<section class="hero">
-  <div class="hero-in">
-    <div>
-      <span class="eyebrow">Plâtrerie &amp; finitions d'exception · Nevers</span>
-      <h1>L'art de la belle finition.</h1>
-      <div class="swipe"></div>
-      <p class="lead">Cloisons, enduits, béton ciré, peinture. Du second œuvre aux matières d'exception, réalisés avec un soin rare — et le suivi de votre chantier en direct, du premier jour à la livraison.</p>
-      <div class="btnrow">
-        <a class="btn" href="realisations.html">Voir nos réalisations <span class="arr">→</span></a>
-        <a class="btn ghost" href="contact.html">Demander un devis</a>
-      </div>
+<!-- Ouvreur : la photo s'agrandit au défilement -->
+<section class="xhero" aria-label="Maison Matière — plâtrerie et finitions à Nevers">
+  <div class="xhero-sticky">
+    <div class="xhero-bg" id="xheroBg"></div>
+    <div class="xhero-media" id="xheroMedia"></div>
+    <div class="xhero-words" id="xheroWords"><span data-w="l">Maison</span><span data-w="r">&nbsp;Matière</span></div>
+    <div class="xhero-caption" id="xheroCap">Salle de bain — enduits à la chaux · Nevers</div>
+    <div class="xhero-hint" id="xheroHint"><span class="dot"></span>Défilez pour découvrir</div>
+  </div>
+</section>
+
+<!-- Reprise du message d'accueil, sous l'ouvreur -->
+<section class="section-plaster">
+  <div class="wrap" style="text-align:center;max-width:760px">
+    <span class="eyebrow" style="justify-content:center">Plâtrerie &amp; finitions d'exception · Nevers</span>
+    <h1 style="margin:14px 0 0">L'art de la belle finition.</h1>
+    <p class="lead" style="margin:20px auto 0">Cloisons, enduits, béton ciré, peinture. Du second œuvre aux matières d'exception, réalisés avec un soin rare — et le suivi de votre chantier en direct, du premier jour à la livraison.</p>
+    <div class="btnrow" style="justify-content:center">
+      <a class="btn" href="realisations.html">Voir nos réalisations <span class="arr">→</span></a>
+      <a class="btn ghost" href="contact.html">Demander un devis</a>
     </div>
-    <figure class="hero-photo">
-      <img src="assets/realisations/salle-de-bain.png" alt="Salle de bain rénovée par Maison Matière : murs en enduit à la chaux, baignoire îlot — Nevers" loading="eager">
-      <figcaption>Salle de bain — enduits à la chaux</figcaption>
-    </figure>
   </div>
 </section>
 
@@ -181,6 +207,61 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 <script src="js/main.js"></script>
 <script src="js/animations.js"></script>
+<script>
+  // Ouvreur « scroll to expand » : la photo grandit jusqu'à remplir l'écran
+  (function () {
+    var sec = document.querySelector('.xhero');
+    var media = document.getElementById('xheroMedia');
+    var bg = document.getElementById('xheroBg');
+    var words = document.getElementById('xheroWords');
+    var hint = document.getElementById('xheroHint');
+    var cap = document.getElementById('xheroCap');
+    if (!sec || !media) return;
+
+    var PHOTO = 'assets/hero.jpg';                 // version légère (113 Ko)
+    media.style.backgroundImage = "url('" + PHOTO + "')";
+    bg.style.backgroundImage = "url('" + PHOTO + "')";
+
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { media.style.width = '100%'; media.style.height = '70vh'; return; }
+
+    var wl = words.querySelector('[data-w="l"]');
+    var wr = words.querySelector('[data-w="r"]');
+
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    function apply() {
+      var total = sec.offsetHeight - window.innerHeight;
+      var p = total > 0 ? Math.min(1, Math.max(0, -sec.getBoundingClientRect().top / total)) : 0;
+      // easing doux (easeOutCubic) pour une expansion « premium »
+      var e = 1 - Math.pow(1 - p, 3);
+
+      var vw = window.innerWidth, vh = window.innerHeight;
+      var startW = Math.min(320, vw * 0.7), startH = Math.min(420, vh * 0.55);
+      media.style.width = lerp(startW, vw, e) + 'px';
+      media.style.height = lerp(startH, vh, e) + 'px';
+      media.style.borderRadius = lerp(16, 0, e) + 'px';
+
+      // Le titre se sépare (les 2 mots s'écartent) puis s'efface
+      var spread = e * vw * 0.6;
+      wl.style.transform = 'translateX(' + (-spread) + 'px)';
+      wr.style.transform = 'translateX(' + (spread) + 'px)';
+      words.style.opacity = (1 - Math.min(1, e * 1.4)).toFixed(3);
+
+      // Le fond flou s'estompe à mesure que la photo remplit l'écran
+      bg.style.opacity = (1 - e * 0.7).toFixed(3);
+      // Indice + légende
+      if (hint) hint.style.opacity = (1 - Math.min(1, e * 3)).toFixed(3);
+      if (cap) cap.style.opacity = Math.max(0, (e - 0.75) * 4).toFixed(3);
+    }
+
+    var ticking = false;
+    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(function () { apply(); ticking = false; }); } }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', apply);
+    apply();  // premier rendu immédiat
+  })();
+</script>
 </body>
 </html>
 
