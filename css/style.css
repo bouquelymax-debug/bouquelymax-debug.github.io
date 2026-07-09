@@ -3,6 +3,9 @@
    Palette minérale, typographie éditoriale, détails fins.
    ===================================================== */
 
+/* Serif éditoriale pour les grands titres (chargée une fois pour tout le site) */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap');
+
 :root{
   --ink:#15171B;          /* noir profond, chaud */
   --ink2:#3A3E46;
@@ -37,10 +40,11 @@ img{max-width:100%;display:block}
 /* ---------- Typographie éditoriale ---------- */
 .eyebrow{font-family:"Space Mono";font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--sand);display:inline-flex;align-items:center;gap:12px}
 .eyebrow::before{content:"";width:34px;height:1px;background:var(--sand)}
-h1,h2,h3{font-family:"Space Grotesk";font-weight:600;letter-spacing:-.025em;line-height:1.04;margin:0}
-h1{font-size:clamp(40px,6.5vw,76px)}
-h2{font-size:clamp(28px,4vw,46px)}
-h3{font-size:20px;letter-spacing:-.01em}
+h1,h2{font-family:"Playfair Display",Georgia,serif;font-weight:500;letter-spacing:-.01em;line-height:1.08;margin:0}
+h1{font-size:clamp(42px,6.8vw,82px)}
+h2{font-size:clamp(30px,4.2vw,50px)}
+h1 em,h2 em{font-style:italic;color:var(--sand)}
+h3{font-family:"Space Grotesk";font-weight:600;font-size:20px;letter-spacing:-.01em;line-height:1.2;margin:0}
 p{margin:.6em 0}
 .lead{font-size:clamp(16px,1.5vw,19px);color:var(--ink2);max-width:58ch;line-height:1.75}
 .swipe{height:2px;width:76px;margin:22px 0;background:linear-gradient(90deg,var(--ink),var(--sand),transparent);background-size:220% 100%;animation:swipemove 3.2s ease-in-out infinite;border-radius:2px}
@@ -63,7 +67,7 @@ p{margin:.6em 0}
 .burger{display:none;background:none;border:1px solid var(--line);border-radius:10px;font-size:20px;width:44px;height:44px;cursor:pointer;color:var(--ink)}
 
 /* ---------- Boutons ---------- */
-.btn{display:inline-block;font-family:"Space Grotesk";font-weight:600;font-size:15px;padding:15px 30px;border-radius:100px;background:var(--ink);color:#fff;border:1px solid var(--ink);cursor:pointer;letter-spacing:.01em;position:relative;overflow:hidden;transition:transform .18s ease,box-shadow .28s ease,background .2s}
+.btn{display:inline-block;font-family:"Space Grotesk";font-weight:600;font-size:12.5px;padding:17px 32px;border-radius:3px;background:var(--ink);color:#fff;border:1px solid var(--ink);cursor:pointer;letter-spacing:.18em;text-transform:uppercase;position:relative;overflow:hidden;transition:transform .18s ease,box-shadow .28s ease,background .2s}
 .btn:hover{transform:translateY(-2px);background:#000;box-shadow:0 14px 32px rgba(21,23,27,.24)}
 .btn:active{transform:translateY(0) scale(.98)}
 .btn.ghost{background:transparent;color:var(--ink);border-color:rgba(21,23,27,.32)}
@@ -105,7 +109,9 @@ section{padding:104px 0}
 .hero.hero-full .eyebrow::before{background:var(--sand2)}
 .hero.hero-full h1{color:#fff;text-shadow:0 2px 30px rgba(0,0,0,.3)}
 .hero.hero-full .lead{color:#e8e6e0}
-.hero.hero-full .badge{display:none}
+.hero.hero-full .badge,.hero.hero-full .hero-photo{display:none}
+.hero.hero-full .hero-in{grid-template-columns:1fr;max-width:1120px}
+.hero.hero-full .lead{max-width:52ch}
 .hero.hero-full .btn.ghost{color:#fff;border-color:rgba(255,255,255,.55)}
 .hero.hero-full .btn.ghost:hover{background:#fff;color:var(--ink);border-color:#fff}
 
@@ -129,7 +135,7 @@ section{padding:104px 0}
 
 /* ---------- Galerie ---------- */
 .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.shot{position:relative;aspect-ratio:4/3;min-height:210px;border-radius:var(--r-m);overflow:hidden;border:1px solid var(--line);transition:transform .3s cubic-bezier(.22,.68,.4,1),box-shadow .3s ease}
+.shot{position:relative;aspect-ratio:4/3;min-height:210px;border-radius:var(--r-m);overflow:hidden;border:1px solid var(--line);transition:transform .55s cubic-bezier(.22,.68,.4,1),box-shadow .55s ease}
 .shot .cap{position:absolute;left:12px;bottom:12px;font-family:"Space Mono";font-size:10px;letter-spacing:.06em;color:#fff;text-transform:uppercase;background:rgba(18,20,24,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:6px 11px;border-radius:8px}
 .shot .ph{position:absolute;right:12px;top:12px;font-family:"Space Mono";font-size:9px;color:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.55);border-radius:20px;padding:3px 9px;backdrop-filter:blur(4px)}
 .shot[data-has-img="1"]{background-size:cover;background-position:center;will-change:transform}
