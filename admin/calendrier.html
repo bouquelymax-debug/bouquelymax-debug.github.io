@@ -67,6 +67,15 @@
     .field{margin-bottom:12px}
     .field label{font-family:"Space Mono";font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--stone);display:block;margin-bottom:5px}
     .field input,.field select,.field textarea{width:100%;font-family:inherit;font-size:14px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff}
+    .field input[type=hidden]{display:none}
+    /* Sélecteur de participants (avatars) */
+    .membres{display:flex;gap:10px;flex-wrap:wrap}
+    .membre{display:flex;align-items:center;gap:9px;padding:6px 14px 6px 6px;border:1px solid var(--line);border-radius:100px;background:#fff;cursor:pointer;font-family:inherit;font-size:14px;color:var(--ink);transition:border-color .18s,background .18s,box-shadow .18s}
+    .membre:hover{border-color:var(--sand)}
+    .membre .ava{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-family:"Space Grotesk";font-weight:700;font-size:13px;flex:none}
+    .membre .mcheck{opacity:0;color:#fff;font-size:11px;width:18px;height:18px;border-radius:50%;background:#2e7d32;display:inline-flex;align-items:center;justify-content:center;transition:opacity .18s;transform:scale(.6)}
+    .membre.on{border-color:var(--ink);background:var(--plaster);box-shadow:0 2px 10px rgba(21,23,27,.08)}
+    .membre.on .mcheck{opacity:1;transform:scale(1)}
     .field textarea{min-height:64px;resize:vertical}
     .grid2f{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .jour-evts{margin-bottom:16px}
@@ -172,12 +181,17 @@
         <div class="field"><label>Heure (optionnel)</label><input id="f-heure" type="time"></div>
       </div>
       <div class="field"><label>Assigné à</label>
-        <select id="f-assigne">
-          <option value="">— Non assigné —</option>
-          <option value="maxence">Maxence</option>
-          <option value="guillaume">Guillaume</option>
-          <option value="deux">Maxence &amp; Guillaume</option>
-        </select>
+        <input type="hidden" id="f-assigne">
+        <div class="membres" id="membres">
+          <button type="button" class="membre" data-p="maxence">
+            <span class="ava" style="background:linear-gradient(135deg,#5b7cc4,#3a5bbf)">M</span>
+            <span class="mnom">Maxence</span><span class="mcheck">✓</span>
+          </button>
+          <button type="button" class="membre" data-p="guillaume">
+            <span class="ava" style="background:linear-gradient(135deg,#b98a4e,#8a6a2f)">G</span>
+            <span class="mnom">Guillaume</span><span class="mcheck">✓</span>
+          </button>
+        </div>
       </div>
       <div class="grid2f">
         <div class="field"><label>Date</label><input id="f-date" type="date" required></div>
@@ -362,6 +376,24 @@ function changerMois(delta){
 }
 function allerAujourdhui(){ const t = new Date(); annee = t.getFullYear(); mois = t.getMonth(); rendre(); }
 
+// ---- Sélecteur de participants (avatars) ----
+// Applique une valeur ('', 'maxence', 'guillaume', 'deux') au sélecteur + champ caché
+function syncMembres(val){
+  const max = val === 'maxence' || val === 'deux';
+  const gui = val === 'guillaume' || val === 'deux';
+  document.querySelector('.membre[data-p="maxence"]').classList.toggle('on', max);
+  document.querySelector('.membre[data-p="guillaume"]').classList.toggle('on', gui);
+  document.getElementById('f-assigne').value = max && gui ? 'deux' : max ? 'maxence' : gui ? 'guillaume' : '';
+}
+document.querySelectorAll('#membres .membre').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    btn.classList.toggle('on');
+    const max = document.querySelector('.membre[data-p="maxence"]').classList.contains('on');
+    const gui = document.querySelector('.membre[data-p="guillaume"]').classList.contains('on');
+    document.getElementById('f-assigne').value = max && gui ? 'deux' : max ? 'maxence' : gui ? 'guillaume' : '';
+  });
+});
+
 // ---- Modal ----
 function ouvrirModal(isoStr){
   document.getElementById('mDate').textContent = dateFr(isoStr);
@@ -369,6 +401,7 @@ function ouvrirModal(isoStr){
   document.getElementById('f-datefin').value = '';
   document.getElementById('evForm').reset();
   document.getElementById('f-date').value = isoStr;
+  syncMembres('');   // remet le sélecteur de participants à zéro
 
   // Événements existants ce jour-là
   const evts = evtsDuJour(isoStr);
