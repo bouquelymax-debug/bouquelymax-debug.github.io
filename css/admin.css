@@ -11,6 +11,7 @@ body{background:var(--paper,#FBF9F5)}
 
 /* L'admin reste en Space Grotesk (la serif éditoriale est réservée au site public) */
 h1,h2{font-family:"Space Grotesk",sans-serif;font-weight:600;letter-spacing:-.02em}
+/* (Le dock macOS est injecté par js/admin-dock.js, styles compris.) */
 
 /* ---- Navigation commune ---- */
 .nav{position:sticky;top:0;z-index:50;background:rgba(251,249,245,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:0 22px;display:flex;align-items:center;gap:26px;height:64px}
