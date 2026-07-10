@@ -304,8 +304,15 @@ body{animation:mmfade .5s ease both}
 @keyframes marq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
 /* ===== Bouton thème ===== */
-.theme-toggle{background:none;border:1px solid var(--line);border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:16px;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;flex:none;transition:transform .3s ease,border-color .2s}
-.theme-toggle:hover{transform:rotate(20deg);border-color:var(--sand)}
+.theme-toggle{position:relative;background:none;border:1px solid var(--line);border-radius:50%;width:40px;height:40px;cursor:pointer;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;flex:none;overflow:hidden;transition:border-color .2s,background .2s}
+.theme-toggle:hover{border-color:var(--sand);background:rgba(168,145,109,.08)}
+.theme-toggle svg{position:absolute;width:18px;height:18px;transition:transform .45s cubic-bezier(.34,1.56,.64,1),opacity .3s ease}
+/* Clair : soleil visible, lune cachée sous le bord */
+.theme-toggle .ico-sun{transform:translateY(0) rotate(0);opacity:1}
+.theme-toggle .ico-moon{transform:translateY(140%) rotate(-60deg);opacity:0}
+/* Sombre : lune visible, soleil qui sort par le haut */
+[data-theme="dark"] .theme-toggle .ico-sun{transform:translateY(-140%) rotate(60deg);opacity:0}
+[data-theme="dark"] .theme-toggle .ico-moon{transform:translateY(0) rotate(0);opacity:1}
 
 /* ===== Mode sombre ===== */
 [data-theme="dark"]{--ink:#ECEAE4;--ink2:#C7C4BC;--plaster:#22252A;--plaster2:#2A2E34;--paper:#17191D;--stone:#9A938A;--line:#34383F;--sand:#C9AE8B;--sand2:#DCC49E;--cream:#E9DCC9;
