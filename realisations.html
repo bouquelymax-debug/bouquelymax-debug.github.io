@@ -30,6 +30,7 @@
     .ring{position:absolute;inset:0;transform-style:preserve-3d;will-change:transform}
     .ring-card{position:absolute;inset:0;border-radius:12px;overflow:hidden;box-shadow:0 26px 60px rgba(21,23,27,.32);border:1px solid rgba(21,23,27,.12);background:#fff;backface-visibility:hidden;will-change:transform,opacity}
     .ring-card img{width:100%;height:100%;object-fit:cover;display:block}
+    .ring-card figcaption{position:absolute;left:0;right:0;bottom:0;padding:22px 16px 12px;color:#fff;font-family:"Space Mono";font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;background:linear-gradient(to top,rgba(18,20,24,.78),transparent)}
     section.section-plaster{overflow:hidden}
     @media(max-width:640px){.ring-stage{width:300px;height:129px}.ring-sec{height:250vh}}
     @media(prefers-reduced-motion:reduce){.ring-sec{height:auto}.ring-sticky{position:static;height:auto;padding:60px 0}.ring{position:relative;transform:none!important}.ring-card{position:relative;inset:auto;margin:0 auto 16px;width:min(440px,90vw);height:auto;aspect-ratio:880/377;transform:none!important;opacity:1!important}}
@@ -119,11 +120,11 @@
     </div>
     <div class="ring-stage">
       <div class="ring" id="ring">
-        <figure class="ring-card" data-full="assets/realisations/cuisine.png"><img src="assets/realisations/cuisine.png" alt="Cuisine — crédence et plan de travail"></figure>
-        <figure class="ring-card" data-full="assets/realisations/sdb-chaux.png"><img src="assets/realisations/sdb-chaux.png" alt="Salle d'eau — enduit à la chaux"></figure>
-        <figure class="ring-card" data-full="assets/realisations/cloisons.png"><img src="assets/realisations/cloisons.png" alt="Cloisons et doublages"></figure>
-        <figure class="ring-card" data-full="assets/realisations/plafond-led.png"><img src="assets/realisations/plafond-led.png" alt="Plafond décaissé — LED"></figure>
-        <figure class="ring-card" data-full="assets/realisations/cage-escalier.png"><img src="assets/realisations/cage-escalier.png" alt="Cage d'escalier — peinture"></figure>
+        <figure class="ring-card" data-full="assets/realisations/cuisine-clean.png"><img src="assets/realisations/cuisine-clean.png" alt="Cuisine — crédence et plan de travail"><figcaption>Cuisine — crédence &amp; plan de travail</figcaption></figure>
+        <figure class="ring-card" data-full="assets/realisations/sdb-chaux-clean.png"><img src="assets/realisations/sdb-chaux-clean.png" alt="Salle d'eau — enduit à la chaux"><figcaption>Salle d'eau — enduit à la chaux</figcaption></figure>
+        <figure class="ring-card" data-full="assets/realisations/cloisons-clean.png"><img src="assets/realisations/cloisons-clean.png" alt="Cloisons et doublages"><figcaption>Cloisons &amp; doublages</figcaption></figure>
+        <figure class="ring-card" data-full="assets/realisations/plafond-led-clean.png"><img src="assets/realisations/plafond-led-clean.png" alt="Plafond décaissé — LED"><figcaption>Plafond décaissé — éclairage LED</figcaption></figure>
+        <figure class="ring-card" data-full="assets/realisations/cage-escalier-clean.png"><img src="assets/realisations/cage-escalier-clean.png" alt="Cage d'escalier — peinture"><figcaption>Cage d'escalier — peinture</figcaption></figure>
       </div>
     </div>
   </div>
@@ -141,38 +142,6 @@
         <p>Murs minéraux · lumière naturelle · finition velours</p>
       </figcaption>
     </figure>
-  </div>
-</section>
-
-<!-- Galerie -->
-<section style="padding-top:0">
-  <div class="wrap">
-    <div class="sec-head" style="margin-bottom:26px">
-      <span class="eyebrow">Galerie</span>
-      <h2>Chaque finition raconte un savoir-faire.</h2>
-    </div>
-    <div class="plates">
-      <div class="plate" data-full="assets/realisations/cuisine.png" data-cap="Cuisine — crédence & plan de travail">
-        <div class="im"><img loading="lazy" src="assets/realisations/cuisine.png" alt="Cuisine — crédence zellige et plan de travail quartz"></div>
-        <div class="meta"><span class="no">02</span><span class="lbl">Crédence zellige &amp; plan quartz — pose et finitions</span><span class="arr">→</span></div>
-      </div>
-      <div class="plate" data-full="assets/realisations/sdb-chaux.png" data-cap="Salle de bain — enduit à la chaux">
-        <div class="im"><img loading="lazy" src="assets/realisations/sdb-chaux.png" alt="Salle d'eau aux murs en enduit à la chaux"></div>
-        <div class="meta"><span class="no">03</span><span class="lbl">Enduit à la chaux — matière brute, rendu doux</span><span class="arr">→</span></div>
-      </div>
-      <div class="plate" data-full="assets/realisations/cloisons.png" data-cap="Cloisons & doublages">
-        <div class="im"><img loading="lazy" src="assets/realisations/cloisons.png" alt="Cloison en cours de montage avec isolation en laine de roche"></div>
-        <div class="meta"><span class="no">04</span><span class="lbl">Cloisons &amp; doublages isolés — l'envers du décor</span><span class="arr">→</span></div>
-      </div>
-      <div class="plate" data-full="assets/realisations/plafond-led.png" data-cap="Plafond décaissé — éclairage LED">
-        <div class="im"><img loading="lazy" src="assets/realisations/plafond-led.png" alt="Plafond décaissé avec éclairage LED indirect"></div>
-        <div class="meta"><span class="no">05</span><span class="lbl">Plafond décaissé — lumière LED indirecte</span><span class="arr">→</span></div>
-      </div>
-      <div class="plate" data-full="assets/realisations/cage-escalier.png" data-cap="Cage d'escalier — peinture">
-        <div class="im"><img loading="lazy" src="assets/realisations/cage-escalier.png" alt="Cage d'escalier repeinte, finition soignée"></div>
-        <div class="meta"><span class="no">06</span><span class="lbl">Cage d'escalier — préparation et peinture</span><span class="arr">→</span></div>
-      </div>
-    </div>
   </div>
 </section>
 
