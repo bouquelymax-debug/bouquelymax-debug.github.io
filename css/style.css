@@ -61,7 +61,12 @@ p{margin:.6em 0}
 .links a{font-size:14px;font-weight:500;color:var(--ink2);padding:4px 0;position:relative;transition:color .2s}
 .links a:hover{color:var(--ink)}.links a.on{color:var(--ink)}
 .links a:not(.cta)::after{content:"";position:absolute;left:0;bottom:-2px;height:2px;width:0;background:var(--sand);transition:width .28s cubic-bezier(.4,0,.2,1);border-radius:2px}
-.links a:not(.cta):hover::after,.links a:not(.cta).on::after{width:100%}
+.links a:not(.cta).on::after{width:100%}
+/* Pastille qui glisse sous l'onglet survolé */
+.nav-cursor{position:absolute;top:50%;transform:translateY(-50%);height:34px;border-radius:100px;background:var(--ink);opacity:0;z-index:0;pointer-events:none;transition:left .32s cubic-bezier(.34,1.3,.64,1),width .32s cubic-bezier(.34,1.3,.64,1),opacity .25s ease}
+.links a:not(.cta){position:relative;z-index:1;padding:6px 14px;border-radius:100px;transition:color .25s ease}
+.links a.nav-hot{color:#fff}
+.links a.nav-hot::after{width:0}
 .links a.cta{background:var(--ink);color:#fff;padding:11px 22px;border-radius:100px;font-weight:600;font-family:"Space Grotesk";letter-spacing:.01em;box-shadow:var(--shadow-s);transition:transform .18s ease,box-shadow .25s ease,background .2s}
 .links a.cta:hover{background:#000;transform:translateY(-1px);box-shadow:0 10px 26px rgba(21,23,27,.22)}
 .burger{display:none;background:none;border:1px solid var(--line);border-radius:10px;font-size:20px;width:44px;height:44px;cursor:pointer;color:var(--ink)}

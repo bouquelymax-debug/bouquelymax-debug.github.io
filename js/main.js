@@ -163,6 +163,28 @@ document.addEventListener('DOMContentLoaded', function () {
     nav.appendChild(tg);
   }
 
+  // Pastille glissante sous l'onglet survolé (nav)
+  var links = document.querySelector('.nav .links');
+  if (links) {
+    var tabs = links.querySelectorAll('a:not(.cta)');
+    if (tabs.length) {
+      var cursor = document.createElement('span');
+      cursor.className = 'nav-cursor';
+      links.appendChild(cursor);
+      var deplacer = function (a) {
+        cursor.style.left = a.offsetLeft + 'px';
+        cursor.style.width = a.offsetWidth + 'px';
+        cursor.style.opacity = '1';
+        tabs.forEach(function (t) { t.classList.toggle('nav-hot', t === a); });
+      };
+      tabs.forEach(function (a) { a.addEventListener('mouseenter', function () { deplacer(a); }); });
+      links.addEventListener('mouseleave', function () {
+        cursor.style.opacity = '0';
+        tabs.forEach(function (t) { t.classList.remove('nav-hot'); });
+      });
+    }
+  }
+
   // Hero plein écran si une photo assets/hero.jpg existe
   var hero = document.querySelector('.hero');
   if (hero) {
