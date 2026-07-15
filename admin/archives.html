@@ -185,6 +185,21 @@ function afficher() {
 
 async function marquerPaye(id) {
   await sb.from('documents').update({ statut: 'paye', date_paiement: new Date().toISOString().split('T')[0] }).eq('id', id);
+  // Accusé de paiement automatique au client
+  const d = tousLesDocs.find(x => x.id === id);
+  if (d && d.client_email && window.mmSendEmail) {
+    const montant = d.montant ? Number(d.montant).toLocaleString('fr-FR') + ' €' : '';
+    window.mmSendEmail({
+      to_email: d.client_email,
+      to_name: d.client_nom,
+      sujet: 'Paiement bien reçu — merci ! · Maison Matière',
+      message: 'Bonjour ' + (d.client_nom || '') + ',\n\n'
+        + 'Nous confirmons la bonne réception de votre règlement' + (montant ? ' de ' + montant : '')
+        + ' pour la facture ' + (d.nom || '') + '.\n'
+        + 'Merci pour votre confiance !\n\n'
+        + 'À bientôt,\nMaison Matière — 06 99 83 56 52'
+    });
+  }
   charger();
 }
 

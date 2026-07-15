@@ -421,6 +421,20 @@ async function changerStatutDoc(id, statut) {
   const update = { statut };
   if (statut === 'paye') update.date_paiement = new Date().toISOString().split('T')[0];
   await sb.from('documents').update(update).eq('id', id);
+  // Accusé de paiement automatique au client
+  if (statut === 'paye' && chantierData && chantierData.client_email && window.mmSendEmail) {
+    const d = (window.__docs || []).find(x => x.id === id) || {};
+    const montant = d.montant ? Number(d.montant).toLocaleString('fr-FR') + ' €' : '';
+    window.mmSendEmail({
+      to_email: chantierData.client_email,
+      to_name: chantierData.client_nom,
+      sujet: 'Paiement bien reçu — merci ! · Maison Matière',
+      message: 'Bonjour ' + (chantierData.client_nom || '') + ',\n\n'
+        + 'Nous confirmons la bonne réception de votre règlement' + (montant ? ' de ' + montant : '')
+        + ' pour la facture ' + (d.nom || '') + '.\n'
+        + 'Merci pour votre confiance !\n\nÀ bientôt,\nMaison Matière — 06 99 83 56 52'
+    });
+  }
 }
 
 async function relancer(docId) {
