@@ -19,13 +19,21 @@
     .real-stats .st b{display:block;font-family:"Space Grotesk";font-size:26px;font-weight:700;letter-spacing:-.02em;background:linear-gradient(100deg,#8a7a5c,#c2ad85);-webkit-background-clip:text;background-clip:text;color:transparent}
     .real-stats .st span{font-family:"Space Mono";font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone)}
 
-    /* ---- Galerie propre (grille) ---- */
-    .gal{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-    .gal-item{position:relative;margin:0;border-radius:14px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow-s);cursor:zoom-in}
-    .gal-item img{width:100%;display:block;transition:transform .8s cubic-bezier(.22,.68,.4,1)}
-    .gal-item:hover img{transform:scale(1.05)}
-    .gal-item figcaption{position:absolute;left:0;right:0;bottom:0;padding:28px 16px 13px;color:#fff;font-family:"Space Mono";font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;background:linear-gradient(to top,rgba(18,20,24,.78),transparent)}
-    @media(max-width:640px){.gal{grid-template-columns:1fr}}
+    /* ---- Galerie éditoriale (alternée) ---- */
+    .folio{display:flex;flex-direction:column;gap:clamp(46px,6vw,84px)}
+    .folio-row{display:flex;gap:clamp(24px,4vw,52px);align-items:center}
+    .folio-row:nth-child(even){flex-direction:row-reverse}
+    .folio-im{flex:1.55;border-radius:16px;overflow:hidden;box-shadow:var(--shadow-m);cursor:zoom-in;position:relative}
+    .folio-im img{width:100%;display:block;transition:transform 1s cubic-bezier(.22,.68,.4,1)}
+    .folio-im:hover img{transform:scale(1.05)}
+    .folio-im .agr{position:absolute;top:14px;right:14px;font-family:"Space Mono";font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:rgba(18,20,24,.35);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.35);border-radius:100px;padding:5px 11px;opacity:0;transition:opacity .25s}
+    .folio-im:hover .agr{opacity:1}
+    .folio-txt{flex:1;min-width:0}
+    .folio-txt .no{font-family:"Space Mono";font-size:12px;letter-spacing:.22em;color:var(--sand);display:block;margin-bottom:12px}
+    .folio-txt h3{font-family:"Playfair Display",Georgia,serif;font-weight:500;font-size:clamp(22px,2.6vw,32px);margin:0 0 12px;line-height:1.14}
+    .folio-txt p{color:var(--ink2);font-size:15px;line-height:1.75;margin:0}
+    .folio-txt .tag{display:inline-block;margin-top:16px;font-family:"Space Mono";font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--stone);border:1px solid var(--line);border-radius:100px;padding:5px 13px}
+    @media(max-width:760px){.folio-row,.folio-row:nth-child(even){flex-direction:column}.folio-im,.folio-txt{width:100%}}
 
     /* ---- Photo à la une ---- */
     .feat{position:relative;border-radius:22px;overflow:hidden;box-shadow:var(--shadow-m);cursor:zoom-in}
@@ -109,12 +117,27 @@
       <span class="eyebrow">Galerie</span>
       <h2>Chaque finition raconte un savoir-faire.</h2>
     </div>
-    <div class="gal">
-      <figure class="gal-item" data-full="assets/realisations/cuisine-clean.png" data-cap="Cuisine — crédence &amp; plan de travail"><img loading="lazy" src="assets/realisations/cuisine-clean.png" alt="Cuisine — crédence et plan de travail"><figcaption>Cuisine — crédence &amp; plan de travail</figcaption></figure>
-      <figure class="gal-item" data-full="assets/realisations/sdb-chaux-clean.png" data-cap="Salle d'eau — enduit à la chaux"><img loading="lazy" src="assets/realisations/sdb-chaux-clean.png" alt="Salle d'eau — enduit à la chaux"><figcaption>Salle d'eau — enduit à la chaux</figcaption></figure>
-      <figure class="gal-item" data-full="assets/realisations/cloisons-clean.png" data-cap="Cloisons &amp; doublages"><img loading="lazy" src="assets/realisations/cloisons-clean.png" alt="Cloisons et doublages"><figcaption>Cloisons &amp; doublages</figcaption></figure>
-      <figure class="gal-item" data-full="assets/realisations/plafond-led-clean.png" data-cap="Plafond décaissé — éclairage LED"><img loading="lazy" src="assets/realisations/plafond-led-clean.png" alt="Plafond décaissé — LED"><figcaption>Plafond décaissé — éclairage LED</figcaption></figure>
-      <figure class="gal-item" data-full="assets/realisations/cage-escalier-clean.png" data-cap="Cage d'escalier — peinture"><img loading="lazy" src="assets/realisations/cage-escalier-clean.png" alt="Cage d'escalier — peinture"><figcaption>Cage d'escalier — peinture</figcaption></figure>
+    <div class="folio">
+      <div class="folio-row">
+        <div class="folio-im" data-full="assets/realisations/cuisine-clean.png" data-cap="Cuisine — crédence &amp; plan de travail"><img loading="lazy" src="assets/realisations/cuisine-clean.png" alt="Cuisine — crédence zellige et plan de travail quartz"><span class="agr">Agrandir +</span></div>
+        <div class="folio-txt"><span class="no">01 — Cuisine</span><h3>Crédence &amp; plan de travail</h3><p>Crédence en zellige beige et plan de travail en quartz veiné. Découpes, pose et joints réalisés au millimètre pour une finition nette et durable.</p><span class="tag">Faïence · Plan de travail</span></div>
+      </div>
+      <div class="folio-row">
+        <div class="folio-im" data-full="assets/realisations/sdb-chaux-clean.png" data-cap="Salle d'eau — enduit à la chaux"><img loading="lazy" src="assets/realisations/sdb-chaux-clean.png" alt="Salle d'eau aux murs en enduit à la chaux"><span class="agr">Agrandir +</span></div>
+        <div class="folio-txt"><span class="no">02 — Salle d'eau</span><h3>Enduit à la chaux</h3><p>Murs habillés d'un enduit à la chaux ferré, teinte sable. Une matière minérale et vivante, douce au toucher, qui capte joliment la lumière.</p><span class="tag">Enduit décoratif · Chaux</span></div>
+      </div>
+      <div class="folio-row">
+        <div class="folio-im" data-full="assets/realisations/cloisons-clean.png" data-cap="Cloisons &amp; doublages"><img loading="lazy" src="assets/realisations/cloisons-clean.png" alt="Cloison en cours de montage avec isolation"><span class="agr">Agrandir +</span></div>
+        <div class="folio-txt"><span class="no">03 — Gros œuvre intérieur</span><h3>Cloisons &amp; doublages</h3><p>Ossature métallique, isolation en laine de roche et plaques BA13. L'envers du décor : la structure invisible d'un intérieur sain et bien isolé.</p><span class="tag">Plaquisterie · Isolation</span></div>
+      </div>
+      <div class="folio-row">
+        <div class="folio-im" data-full="assets/realisations/plafond-led-clean.png" data-cap="Plafond décaissé — éclairage LED"><img loading="lazy" src="assets/realisations/plafond-led-clean.png" alt="Plafond décaissé avec éclairage LED indirect"><span class="agr">Agrandir +</span></div>
+        <div class="folio-txt"><span class="no">04 — Plafond</span><h3>Décaissé &amp; lumière LED</h3><p>Plafond décaissé avec gorge lumineuse LED indirecte. Une lumière douce et enveloppante qui souligne les volumes et réchauffe la pièce le soir.</p><span class="tag">Plâtrerie · Éclairage</span></div>
+      </div>
+      <div class="folio-row">
+        <div class="folio-im" data-full="assets/realisations/cage-escalier-clean.png" data-cap="Cage d'escalier — peinture"><img loading="lazy" src="assets/realisations/cage-escalier-clean.png" alt="Cage d'escalier repeinte, finition soignée"><span class="agr">Agrandir +</span></div>
+        <div class="folio-txt"><span class="no">05 — Peinture</span><h3>Cage d'escalier</h3><p>Préparation soignée des supports puis mise en peinture, jusque dans les angles les plus délicats. Un rendu net, uniforme, sans reprise.</p><span class="tag">Peinture · Finitions</span></div>
+      </div>
     </div>
   </div>
 </section>
