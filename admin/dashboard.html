@@ -96,6 +96,26 @@
     .modal input:focus{border-color:var(--sand,#A8916D)}
     .link-copy{background:var(--plaster);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-family:"Space Mono";font-size:12px;word-break:break-all;margin-top:8px;cursor:pointer}
 
+    /* ---- Sous-infos KPI ---- */
+    .kpi .ksub{font-size:11.5px;color:var(--stone);margin-top:5px;font-family:"Hanken Grotesk"}
+
+    /* ---- Recherche + filtres chantiers ---- */
+    .ch-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+    .ch-search{flex:1;min-width:200px;padding:10px 14px;border:1px solid var(--line);border-radius:100px;background:#fff;font-family:"Hanken Grotesk";font-size:13.5px;outline:none;transition:border-color .15s}
+    .ch-search:focus{border-color:var(--sand,#A8916D)}
+    .chip-st{font-family:"Space Mono";font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:8px 14px;border-radius:100px;border:1px solid var(--line);background:#fff;color:var(--stone);cursor:pointer;transition:all .15s}
+    .chip-st.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+    /* ---- Cartes chantiers enrichies ---- */
+    .ava-ch{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#8a7a5c,#c2ad85);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-family:"Space Grotesk";font-weight:700;font-size:15px;flex:none}
+    .mini-act{font-family:"Space Mono";font-size:10px;color:var(--stone);border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;cursor:pointer;text-decoration:none;transition:all .15s;white-space:nowrap}
+    .mini-act:hover{color:var(--ink);border-color:var(--sand)}
+
+    /* ---- Squelettes de chargement ---- */
+    @keyframes skpulse{0%{background-position:120% 0}100%{background-position:-20% 0}}
+    .sk{height:14px;border-radius:7px;background:linear-gradient(90deg,var(--plaster) 30%,#f7f4ec 50%,var(--plaster) 70%);background-size:200% 100%;animation:skpulse 1.3s linear infinite;margin:12px 0}
+    .sk.w60{width:60%}.sk.w80{width:80%}.sk.w40{width:40%}
+
     @media(max-width:760px){
       .nav{height:auto;padding:10px 14px;flex-wrap:wrap;gap:10px}
       .nav-links{order:3;flex-basis:100%}
@@ -139,7 +159,7 @@
 <div class="page">
   <!-- Bienvenue -->
   <div class="hello">
-    <h1>Bonjour<span class="accent">.</span> Voici votre journée</h1>
+    <h1><span id="helloMot">Bonjour</span><span class="accent">.</span> <span id="helloSuite">Voici votre journée</span></h1>
     <div class="hello-date" id="helloDate"></div>
   </div>
 
@@ -147,20 +167,20 @@
   <div class="today">
     <section class="panel">
       <div class="panel-head"><h2>Rendez-vous du jour</h2><a href="calendrier.html">Calendrier →</a></div>
-      <div id="rdvJour"><div class="todo-empty">Chargement…</div></div>
+      <div id="rdvJour"><div class="sk w80"></div><div class="sk w60"></div></div>
     </section>
     <section class="panel">
       <div class="panel-head"><h2>À faire</h2><a href="leads.html">Demandes →</a></div>
-      <div id="todoList"><div class="todo-empty">Chargement…</div></div>
+      <div id="todoList"><div class="sk w80"></div><div class="sk w60"></div></div>
     </section>
   </div>
 
   <!-- Indicateurs -->
   <div class="kpis" id="statsGrid">
-    <div class="kpi"><div class="label">Chantiers en cours</div><div class="value" id="s-encours">—</div></div>
-    <div class="kpi gold"><div class="label">Devis envoyés</div><div class="value" id="s-devis">—</div></div>
-    <div class="kpi green"><div class="label">Encaissé</div><div class="value" id="s-paye">—</div></div>
-    <div class="kpi alert"><div class="label">En attente</div><div class="value" id="s-impaye">—</div></div>
+    <div class="kpi"><div class="label">Chantiers en cours</div><div class="value" id="s-encours">—</div><div class="ksub" id="s-encours-sub"></div></div>
+    <div class="kpi gold"><div class="label">Devis envoyés</div><div class="value" id="s-devis">—</div><div class="ksub" id="s-devis-sub"></div></div>
+    <div class="kpi green"><div class="label">Encaissé</div><div class="value" id="s-paye">—</div><div class="ksub" id="s-paye-sub"></div></div>
+    <div class="kpi alert"><div class="label">En attente</div><div class="value" id="s-impaye">—</div><div class="ksub" id="s-impaye-sub"></div></div>
   </div>
 
   <!-- Alertes retard -->
@@ -183,14 +203,26 @@
     <div class="section-title">Tous les chantiers</div>
     <a href="archives.html" style="font-family:'Space Mono';font-size:10.5px;color:var(--sand,#A8916D);text-decoration:none">Archives →</a>
   </div>
-  <div id="liste"></div>
+  <div class="ch-tools">
+    <input class="ch-search" id="chSearch" placeholder="Rechercher un client, une adresse…">
+    <button class="chip-st on" data-st="">Tous</button>
+    <button class="chip-st" data-st="en cours">En cours</button>
+    <button class="chip-st" data-st="terminé">Terminés</button>
+    <button class="chip-st" data-st="en pause">En pause</button>
+  </div>
+  <div id="liste"><div class="sk w80"></div><div class="sk w60"></div><div class="sk w40"></div></div>
 </div>
 
 <script>
-  // Date du jour dans l'en-tête
+  // Salutation + date selon l'heure
   document.addEventListener('DOMContentLoaded', function () {
     var el = document.getElementById('helloDate');
     if (el) el.textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    var h = new Date().getHours();
+    var mot = h < 5 ? 'Bonsoir' : h < 18 ? 'Bonjour' : 'Bonsoir';
+    var suite = h < 5 ? 'Encore debout ?' : h < 12 ? 'Voici votre journée' : h < 18 ? 'Voici votre après-midi' : 'Voici votre soirée';
+    var m = document.getElementById('helloMot'); if (m) m.textContent = mot;
+    var s = document.getElementById('helloSuite'); if (s) s.textContent = suite;
   });
 </script>
 
@@ -336,14 +368,25 @@ async function chargerStats() {
   const { data: docs } = await sb.from('documents').select('type, montant, statut, date_echeance, date_paiement, created_at');
 
   const enCours = (chantiers || []).filter(c => c.statut === 'en cours').length;
-  const devis = (docs || []).filter(d => d.type === 'devis').reduce((s, d) => s + (d.montant || 0), 0);
-  const paye = (docs || []).filter(d => d.type === 'facture' && d.statut === 'paye').reduce((s, d) => s + (d.montant || 0), 0);
-  const impaye = (docs || []).filter(d => d.type === 'facture' && d.statut === 'en-attente').reduce((s, d) => s + (d.montant || 0), 0);
+  const termines = (chantiers || []).filter(c => c.statut === 'terminé').length;
+  const lesDevis = (docs || []).filter(d => d.type === 'devis');
+  const devis = lesDevis.reduce((s, d) => s + (d.montant || 0), 0);
+  const devisAcceptes = lesDevis.filter(d => d.statut === 'accepte').length;
+  const factPayees = (docs || []).filter(d => d.type === 'facture' && d.statut === 'paye');
+  const factAttente = (docs || []).filter(d => d.type === 'facture' && d.statut === 'en-attente');
+  const paye = factPayees.reduce((s, d) => s + (d.montant || 0), 0);
+  const impaye = factAttente.reduce((s, d) => s + (d.montant || 0), 0);
+  const nbRetards = factAttente.filter(d => d.date_echeance && new Date(d.date_echeance) < new Date()).length;
 
   document.getElementById('s-encours').textContent = enCours;
   document.getElementById('s-devis').textContent = devis.toLocaleString('fr-FR') + ' €';
   document.getElementById('s-paye').textContent = paye.toLocaleString('fr-FR') + ' €';
   document.getElementById('s-impaye').textContent = impaye.toLocaleString('fr-FR') + ' €';
+  // Sous-infos de contexte
+  document.getElementById('s-encours-sub').textContent = termines ? termines + ' terminé' + (termines > 1 ? 's' : '') : 'aucun terminé pour l\'instant';
+  document.getElementById('s-devis-sub').textContent = lesDevis.length ? lesDevis.length + ' devis · ' + devisAcceptes + ' signé' + (devisAcceptes > 1 ? 's' : '') : 'aucun devis émis';
+  document.getElementById('s-paye-sub').textContent = factPayees.length ? factPayees.length + ' facture' + (factPayees.length > 1 ? 's' : '') + ' payée' + (factPayees.length > 1 ? 's' : '') : 'rien d\'encaissé encore';
+  document.getElementById('s-impaye-sub').textContent = factAttente.length ? factAttente.length + ' facture' + (factAttente.length > 1 ? 's' : '') + (nbRetards ? ' · ' + nbRetards + ' en retard ⚠' : '') : 'tout est réglé ✓';
 
   // Alertes retard
   const today = new Date();
@@ -392,32 +435,75 @@ async function chargerStats() {
   });
 }
 
+let CH_CACHE = [];
+let CH_FILTRE_ST = '';
+
 async function chargerChantiers() {
   chargerStats();
-  const { data, error } = await sb.from('chantiers').select('*').order('created_at', { ascending: false });
+  const { data } = await sb.from('chantiers').select('*').order('created_at', { ascending: false });
+  CH_CACHE = data || [];
+  afficherChantiers();
+}
+
+function initiales(nom) {
+  return (nom || '?').trim().split(/\s+/).map(m => m[0]).slice(0, 2).join('').toUpperCase();
+}
+function periodeTxt(c) {
+  const f = d => d ? d.split('-').reverse().slice(0, 2).join('/') : null;
+  if (c.date_debut && c.date_fin) return f(c.date_debut) + ' → ' + f(c.date_fin);
+  if (c.date_debut) return 'début ' + f(c.date_debut);
+  return null;
+}
+
+function afficherChantiers() {
   const liste = document.getElementById('liste');
-  if (!data || data.length === 0) {
+  const q = (document.getElementById('chSearch').value || '').toLowerCase();
+  let data = CH_CACHE;
+  if (CH_FILTRE_ST) data = data.filter(c => c.statut === CH_FILTRE_ST);
+  if (q) data = data.filter(c => (c.client_nom || '').toLowerCase().includes(q) || (c.adresse || '').toLowerCase().includes(q));
+
+  if (!CH_CACHE.length) {
     liste.innerHTML = '<div class="empty"><p>Aucun chantier pour l\'instant.</p><p>Cliquez sur "+ Nouveau chantier" pour démarrer.</p></div>';
     return;
   }
-  liste.innerHTML = data.map(c => `
+  if (!data.length) {
+    liste.innerHTML = '<div class="empty"><p>Aucun chantier ne correspond à cette recherche.</p></div>';
+    return;
+  }
+  liste.innerHTML = data.map(c => {
+    const periode = periodeTxt(c);
+    return `
     <div class="card-chantier">
+      <span class="ava-ch">${initiales(c.client_nom)}</span>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <h3 style="margin:0">${c.client_nom}</h3>
           <span class="badge-statut ${c.statut === 'en cours' ? 'live' : ''}">${c.statut}</span>
+          ${periode ? `<span class="meta">📅 ${periode}</span>` : ''}
         </div>
-        <div class="meta" style="margin-top:4px">${c.adresse || 'Adresse non renseignée'} · ${new Date(c.created_at).toLocaleDateString('fr-FR')}</div>
+        <div class="meta" style="margin-top:4px">${c.adresse || 'Adresse non renseignée'}</div>
         <div class="progress-bar"><div class="progress-fill" style="width:${c.progression}%"></div></div>
-        <div class="meta" style="margin-top:4px">${c.progression} %</div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <a class="mini-act" href="devis.html?ch=${c.id}">📋 Devis</a>
+          <a class="mini-act" href="facture.html?ch=${c.id}">🧾 Facture</a>
+          <button class="mini-act" onclick="copierLien('${c.token}')">🔗 Lien client</button>
+        </div>
       </div>
       <div class="card-chantier-actions" style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
         <button class="btn" onclick="location.href='chantier.html?id=${c.id}'">Gérer →</button>
-        <div style="font-family:'Space Mono';font-size:10px;color:var(--stone);cursor:pointer;white-space:nowrap" onclick="copierLien('${c.token}')">📋 Lien client</div>
+        <span class="meta">${c.progression} %</span>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
+
+// Recherche + filtres de statut
+document.getElementById('chSearch').addEventListener('input', afficherChantiers);
+document.querySelectorAll('.chip-st').forEach(b => b.addEventListener('click', () => {
+  CH_FILTRE_ST = b.dataset.st;
+  document.querySelectorAll('.chip-st').forEach(x => x.classList.toggle('on', x === b));
+  afficherChantiers();
+}));
 
 function copierLien(token) {
   const url = `${location.origin}/chantier.html?token=${token}`;
