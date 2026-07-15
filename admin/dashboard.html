@@ -13,7 +13,7 @@
     *{-webkit-tap-highlight-color:transparent}
 
     /* ---- Navigation ---- */
-    .nav{position:sticky;top:0;z-index:50;background:rgba(251,249,245,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:0 22px;display:flex;align-items:center;gap:26px;height:64px}
+    .nav{position:sticky;top:0;z-index:50;background:rgba(251,249,245,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:0 22px;display:flex;align-items:center;justify-content:space-between;gap:26px;height:64px}
     .nav-brand{display:flex;align-items:center;gap:10px;flex:none}
     .nav-brand svg{flex:none}
     .nav-brand b{font-family:"Space Grotesk";font-weight:600;font-size:14px;letter-spacing:.1em;text-transform:uppercase;display:block;line-height:1.1}
@@ -141,15 +141,6 @@
     <svg viewBox="0 0 100 100" width="30" height="30" xmlns="http://www.w3.org/2000/svg"><path d="M25 81 V23 L50 56 L75 23 V81" fill="none" stroke="#A3967A" stroke-width="15.5" stroke-linejoin="miter" stroke-linecap="square"/></svg>
     <div><b>Maison Matière</b><small>Espace admin</small></div>
   </div>
-  <nav class="nav-links">
-    <a class="on" href="dashboard.html">Tableau de bord</a>
-    <a href="calendrier.html">Calendrier</a>
-    <a href="finances.html">Finances</a>
-    <a href="leads.html">Demandes</a>
-    <a href="devis.html">Devis</a>
-    <a href="facture.html">Facture</a>
-    <a href="archives.html">Archives</a>
-  </nav>
   <div class="nav-cta">
     <button class="btn-new" onclick="openModal()">+ Nouveau chantier</button>
     <button class="nav-out" onclick="deconnexion()">Quitter</button>

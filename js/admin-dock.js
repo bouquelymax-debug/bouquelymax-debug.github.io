@@ -15,18 +15,18 @@
   if (here === '' || here === 'index.html') return; // pas de dock sur l'écran de connexion
 
   // Styles du dock (injectés ici pour marcher sur toutes les pages, même sans admin.css)
+  // Navigation principale : dock centré EN HAUT (dans l'en-tête).
   var css = document.createElement('style');
   css.textContent =
-    '.mmdock{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:60;display:flex;align-items:flex-end;gap:10px;padding:10px 14px;border-radius:22px;background:rgba(251,249,245,.72);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border:1px solid rgba(226,219,205,.9);box-shadow:0 12px 40px rgba(21,23,27,.18)}' +
-    '.mmdock-item{position:relative;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#3A3E46;background:#fff;border:1px solid #E2DBCD;text-decoration:none;transform-origin:bottom center;transition:transform .16s cubic-bezier(.22,.68,.4,1),color .2s,background .2s;will-change:transform}' +
-    '.mmdock-item svg{width:20px;height:20px}' +
+    '.mmdock{position:fixed;left:50%;top:11px;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:100px;background:rgba(251,249,245,.75);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border:1px solid rgba(226,219,205,.9);box-shadow:0 8px 26px rgba(21,23,27,.14)}' +
+    '.mmdock-item{position:relative;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#3A3E46;background:#fff;border:1px solid #E2DBCD;text-decoration:none;transform-origin:center;transition:transform .16s cubic-bezier(.22,.68,.4,1),color .2s,background .2s;will-change:transform}' +
+    '.mmdock-item svg{width:19px;height:19px}' +
     '.mmdock-item:hover{color:#15171B}' +
     '.mmdock-item.on{color:#fff;background:#15171B;border-color:#15171B}' +
-    '.mmdock-item.on::after{content:"";position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#A8916D}' +
-    '.mmdock-tip{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%) translateY(4px);background:#15171B;color:#fff;font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:7px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease}' +
+    '.mmdock-item.on::after{content:"";position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#A8916D}' +
+    '.mmdock-tip{position:absolute;top:calc(100% + 9px);left:50%;transform:translateX(-50%) translateY(-4px);background:#15171B;color:#fff;font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:7px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease}' +
     '.mmdock-item:hover .mmdock-tip{opacity:1;transform:translateX(-50%) translateY(0)}' +
-    'body{padding-bottom:92px}' +
-    '@media(max-width:560px){.mmdock{gap:4px;padding:8px 10px}.mmdock-item{width:38px;height:38px}.mmdock-item svg{width:17px;height:17px}}' +
+    '@media(max-width:760px){.mmdock{top:auto;bottom:12px;gap:4px;padding:7px 10px}.mmdock-item{width:38px;height:38px}.mmdock-item svg{width:17px;height:17px}.mmdock-tip{top:auto;bottom:calc(100% + 9px)}body{padding-bottom:86px}}' +
     '@media print{.mmdock{display:none!important}}';
   document.head.appendChild(css);
 
@@ -45,16 +45,15 @@
   var items = Array.prototype.slice.call(dock.querySelectorAll('.mmdock-item'));
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Effet loupe : chaque icône grossit selon sa distance au curseur
-  var SIGMA = 70, MAX = 0.65, LIFT = 14;
+  // Effet loupe : chaque icône grossit selon sa distance au curseur (scale seul, marche en haut comme en bas)
+  var SIGMA = 66, MAX = 0.55;
   function magnify(mx) {
     items.forEach(function (el) {
       var r = el.getBoundingClientRect();
       var c = r.left + r.width / 2;
       var d = mx - c;
       var f = Math.exp(-(d * d) / (2 * SIGMA * SIGMA)); // 1 au centre → 0 loin
-      var s = 1 + MAX * f;
-      el.style.transform = 'translateY(' + (-LIFT * f) + 'px) scale(' + s + ')';
+      el.style.transform = 'scale(' + (1 + MAX * f) + ')';
     });
   }
   function reset() { items.forEach(function (el) { el.style.transform = ''; }); }

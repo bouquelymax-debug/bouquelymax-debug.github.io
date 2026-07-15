@@ -14,7 +14,7 @@ h1,h2{font-family:"Space Grotesk",sans-serif;font-weight:600;letter-spacing:-.02
 /* (Le dock macOS est injecté par js/admin-dock.js, styles compris.) */
 
 /* ---- Navigation commune ---- */
-.nav{position:sticky;top:0;z-index:50;background:rgba(251,249,245,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:0 22px;display:flex;align-items:center;gap:26px;height:64px}
+.nav{position:sticky;top:0;z-index:50;background:rgba(251,249,245,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:0 22px;display:flex;align-items:center;justify-content:space-between;gap:26px;height:64px}
 .nav-brand{display:flex;align-items:center;gap:10px;flex:none;text-decoration:none;color:inherit}
 .nav-brand svg{flex:none}
 .nav-brand b{font-family:"Space Grotesk";font-weight:600;font-size:14px;letter-spacing:.1em;text-transform:uppercase;display:block;line-height:1.1}
