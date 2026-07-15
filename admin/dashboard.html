@@ -54,8 +54,14 @@
     .kpi.green .value{color:#2e7d32}
     .kpi.alert .value{color:#c0392b}
 
-    /* ---- Graphiques ---- */
-    #chartsRow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:30px}
+    /* ---- Graphiques repliables ---- */
+    .stats-fold{margin-bottom:30px;border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden}
+    .stats-fold>summary{list-style:none;cursor:pointer;padding:15px 20px;font-family:"Space Mono";font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--stone);display:flex;align-items:center;justify-content:space-between}
+    .stats-fold>summary::-webkit-details-marker{display:none}
+    .stats-fold>summary::after{content:"Afficher ▾";font-size:10px;color:var(--sand,#A8916D)}
+    .stats-fold[open]>summary::after{content:"Masquer ▴"}
+    .stats-fold[open]>summary{border-bottom:1px solid var(--line)}
+    #chartsRow{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:16px}
     .stat-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 1px 2px rgba(21,23,27,.03)}
     .stat-card .label{font-family:"Space Mono";font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--stone)}
 
@@ -177,17 +183,20 @@
   <!-- Alertes retard -->
   <div id="alertesRetard"></div>
 
-  <!-- Graphiques -->
-  <div id="chartsRow">
-    <div class="stat-card">
-      <div class="label" style="margin-bottom:14px">Chiffre d'affaires — 6 derniers mois</div>
-      <div style="position:relative;height:220px"><canvas id="chartMensuel"></canvas></div>
+  <!-- Graphiques (repliés par défaut pour épurer) -->
+  <details class="stats-fold" id="statsFold">
+    <summary>📊 Statistiques &amp; graphiques</summary>
+    <div id="chartsRow">
+      <div class="stat-card">
+        <div class="label" style="margin-bottom:14px">Chiffre d'affaires — 6 derniers mois</div>
+        <div style="position:relative;height:220px"><canvas id="chartMensuel"></canvas></div>
+      </div>
+      <div class="stat-card">
+        <div class="label" style="margin-bottom:14px">Répartition des chantiers</div>
+        <div style="position:relative;height:220px"><canvas id="chartStatuts"></canvas></div>
+      </div>
     </div>
-    <div class="stat-card">
-      <div class="label" style="margin-bottom:14px">Répartition des chantiers</div>
-      <div style="position:relative;height:220px"><canvas id="chartStatuts"></canvas></div>
-    </div>
-  </div>
+  </details>
 
   <!-- Liste chantiers -->
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -214,6 +223,11 @@
     var suite = h < 5 ? 'Encore debout ?' : h < 12 ? 'Voici votre journée' : h < 18 ? 'Voici votre après-midi' : 'Voici votre soirée';
     var m = document.getElementById('helloMot'); if (m) m.textContent = mot;
     var s = document.getElementById('helloSuite'); if (s) s.textContent = suite;
+    // À l'ouverture des statistiques, on redimensionne les graphiques (rendus à 0 quand repliés)
+    var fold = document.getElementById('statsFold');
+    if (fold) fold.addEventListener('toggle', function () {
+      if (fold.open) { try { chartMensuelInst && chartMensuelInst.resize(); chartStatutsInst && chartStatutsInst.resize(); } catch (e) {} }
+    });
   });
 </script>
 

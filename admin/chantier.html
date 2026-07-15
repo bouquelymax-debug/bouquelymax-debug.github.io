@@ -63,12 +63,9 @@
         <input type="range" id="progression" min="0" max="100" step="5" value="0" oninput="document.getElementById('progLabel').textContent=this.value">
       </div>
       <div class="field">
-        <label>Statut</label>
-        <select id="statut">
-          <option value="en cours">En cours</option>
-          <option value="terminé">Terminé</option>
-          <option value="en pause">En pause</option>
-        </select>
+        <label>Statut <span style="color:var(--sand)">· automatique</span></label>
+        <span id="statutBadge" style="display:inline-flex;align-items:center;font-family:'Space Mono';font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:8px 15px;border-radius:100px;background:var(--plaster);color:var(--stone)">—</span>
+        <div style="font-size:11.5px;color:var(--stone);margin-top:7px">Se met à jour tout seul selon l'avancement : dès qu'une étape démarre → <b>en cours</b> · toutes les étapes finies → <b>terminé</b>.</div>
       </div>
       <button class="btn" onclick="sauvegarder()" style="width:100%">Sauvegarder</button>
       <button onclick="supprimerChantier()" style="width:100%;margin-top:8px;background:none;border:1px solid #e74c3c;color:#e74c3c;border-radius:10px;padding:10px;font-family:'Space Mono';font-size:12px;cursor:pointer">🗑 Supprimer ce chantier</button>
@@ -193,7 +190,7 @@ async function charger() {
   if (document.getElementById('dateFin')) document.getElementById('dateFin').value = data.date_fin || '';
   document.getElementById('progression').value = data.progression;
   document.getElementById('progLabel').textContent = data.progression;
-  document.getElementById('statut').value = data.statut;
+  majStatutBadge(data.statut);
   const lien = `${location.origin.replace('/admin','')}/chantier.html?token=${data.token}`;
   document.getElementById('lienClient').textContent = lien;
   chargerFeed();
@@ -346,6 +343,19 @@ async function ajouterEtape() {
   chargerEtapes();
 }
 
+// Affiche le badge de statut (couleur selon l'état)
+function majStatutBadge(st) {
+  const el = document.getElementById('statutBadge');
+  if (!el) return;
+  const map = {
+    'en cours': ['🟢 En cours', '#e8f5e9', '#2e7d32'],
+    'terminé': ['✓ Terminé', '#eef2ff', '#3a5bbf'],
+    'en pause': ['⏸ En pause', '#fff8ee', '#b06010']
+  };
+  const m = map[st] || ['—', 'var(--plaster)', 'var(--stone)'];
+  el.textContent = m[0]; el.style.background = m[1]; el.style.color = m[2];
+}
+
 async function changerStatut(id, statut) {
   await sb.from('etapes').update({ statut }).eq('id', id);
   chargerEtapes();
@@ -360,12 +370,14 @@ async function majProgressionAuto() {
   const pct = Math.round((score / data.length) * 100 / 5) * 5;
   document.getElementById('progression').value = pct;
   document.getElementById('progLabel').textContent = pct;
-  const maj = { progression: pct };
-  // Chantier terminé de lui-même quand tout est fini
-  if (pct === 100 && chantierData && chantierData.statut !== 'terminé') {
-    maj.statut = 'terminé';
-    document.getElementById('statut').value = 'terminé';
-    chantierData.statut = 'terminé';
+  // Statut 100% automatique : dès qu'une étape a démarré → en cours ; tout fini → terminé
+  const auto = pct >= 100 ? 'terminé' : (pct > 0 ? 'en cours' : (chantierData ? chantierData.statut : 'en cours'));
+  const maj = { progression: pct, statut: auto };
+  majStatutBadge(auto);
+  const devientTermine = auto === 'terminé' && chantierData && chantierData.statut !== 'terminé';
+  if (chantierData) chantierData.statut = auto;
+  // Demande d'avis Google automatique au passage en « terminé »
+  if (devientTermine) {
     // Demande d'avis Google automatique (comme via « Sauvegarder »)
     const email = chantierData.client_email || '';
     if (email && window.mmSendEmail) {
@@ -524,13 +536,16 @@ async function supprimerChantier() {
 }
 
 async function sauvegarder() {
-  const nouveauStatut = document.getElementById('statut').value;
   const ancienStatut = chantierData ? chantierData.statut : null;
+  const prog = parseInt(document.getElementById('progression').value) || 0;
+  // Statut déduit automatiquement de l'avancement
+  const nouveauStatut = prog >= 100 ? 'terminé' : (prog > 0 ? 'en cours' : (ancienStatut || 'en cours'));
+  majStatutBadge(nouveauStatut);
   const email = document.getElementById('clientEmail') ? document.getElementById('clientEmail').value.trim() : '';
   const maj = {
     client_nom: document.getElementById('clientNom').value,
     adresse: document.getElementById('adresse').value,
-    progression: parseInt(document.getElementById('progression').value),
+    progression: prog,
     statut: nouveauStatut
   };
   const optionnels = {
