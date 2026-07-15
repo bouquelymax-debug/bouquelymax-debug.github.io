@@ -19,21 +19,13 @@
     .real-stats .st b{display:block;font-family:"Space Grotesk";font-size:26px;font-weight:700;letter-spacing:-.02em;background:linear-gradient(100deg,#8a7a5c,#c2ad85);-webkit-background-clip:text;background-clip:text;color:transparent}
     .real-stats .st span{font-family:"Space Mono";font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone)}
 
-    /* ---- Galerie 3D circulaire qui pivote au défilement ---- */
-    .ring-sec{position:relative;height:320vh;background:var(--plaster);background-image:radial-gradient(circle at 1px 1px,rgba(21,23,27,.045) 1px,transparent 0);background-size:22px 22px}
-    .ring-sticky{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
-    .ring-head{position:absolute;top:70px;left:0;right:0;text-align:center;z-index:5;pointer-events:none}
-    .ring-head .eyebrow{justify-content:center}
-    .ring-head h2{margin-top:8px}
-    .ring-hint{font-family:"Space Mono";font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--stone);margin-top:10px}
-    .ring-stage{position:relative;width:440px;height:189px;perspective:1800px}
-    .ring{position:absolute;inset:0;transform-style:preserve-3d;will-change:transform}
-    .ring-card{position:absolute;inset:0;border-radius:12px;overflow:hidden;box-shadow:0 26px 60px rgba(21,23,27,.32);border:1px solid rgba(21,23,27,.12);background:#fff;backface-visibility:hidden;will-change:transform,opacity}
-    .ring-card img{width:100%;height:100%;object-fit:cover;display:block}
-    .ring-card figcaption{position:absolute;left:0;right:0;bottom:0;padding:22px 16px 12px;color:#fff;font-family:"Space Mono";font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;background:linear-gradient(to top,rgba(18,20,24,.78),transparent)}
-    section.section-plaster{overflow:hidden}
-    @media(max-width:640px){.ring-stage{width:300px;height:129px}.ring-sec{height:250vh}}
-    @media(prefers-reduced-motion:reduce){.ring-sec{height:auto}.ring-sticky{position:static;height:auto;padding:60px 0}.ring{position:relative;transform:none!important}.ring-card{position:relative;inset:auto;margin:0 auto 16px;width:min(440px,90vw);height:auto;aspect-ratio:880/377;transform:none!important;opacity:1!important}}
+    /* ---- Galerie propre (grille) ---- */
+    .gal{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .gal-item{position:relative;margin:0;border-radius:14px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow-s);cursor:zoom-in}
+    .gal-item img{width:100%;display:block;transition:transform .8s cubic-bezier(.22,.68,.4,1)}
+    .gal-item:hover img{transform:scale(1.05)}
+    .gal-item figcaption{position:absolute;left:0;right:0;bottom:0;padding:28px 16px 13px;color:#fff;font-family:"Space Mono";font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;background:linear-gradient(to top,rgba(18,20,24,.78),transparent)}
+    @media(max-width:640px){.gal{grid-template-columns:1fr}}
 
     /* ---- Photo à la une ---- */
     .feat{position:relative;border-radius:22px;overflow:hidden;box-shadow:var(--shadow-m);cursor:zoom-in}
@@ -110,22 +102,19 @@
   </div>
 </section>
 
-<!-- Galerie 3D circulaire : tourne au défilement -->
-<section class="ring-sec" aria-label="Galerie en rotation">
-  <div class="ring-sticky">
-    <div class="ring-head">
-      <span class="eyebrow">Galerie 360°</span>
-      <h2>Faites tourner nos finitions.</h2>
-      <div class="ring-hint">↕ Défilez pour faire pivoter</div>
+<!-- Galerie -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head" style="margin-bottom:26px">
+      <span class="eyebrow">Galerie</span>
+      <h2>Chaque finition raconte un savoir-faire.</h2>
     </div>
-    <div class="ring-stage">
-      <div class="ring" id="ring">
-        <figure class="ring-card" data-full="assets/realisations/cuisine-clean.png"><img src="assets/realisations/cuisine-clean.png" alt="Cuisine — crédence et plan de travail"><figcaption>Cuisine — crédence &amp; plan de travail</figcaption></figure>
-        <figure class="ring-card" data-full="assets/realisations/sdb-chaux-clean.png"><img src="assets/realisations/sdb-chaux-clean.png" alt="Salle d'eau — enduit à la chaux"><figcaption>Salle d'eau — enduit à la chaux</figcaption></figure>
-        <figure class="ring-card" data-full="assets/realisations/cloisons-clean.png"><img src="assets/realisations/cloisons-clean.png" alt="Cloisons et doublages"><figcaption>Cloisons &amp; doublages</figcaption></figure>
-        <figure class="ring-card" data-full="assets/realisations/plafond-led-clean.png"><img src="assets/realisations/plafond-led-clean.png" alt="Plafond décaissé — LED"><figcaption>Plafond décaissé — éclairage LED</figcaption></figure>
-        <figure class="ring-card" data-full="assets/realisations/cage-escalier-clean.png"><img src="assets/realisations/cage-escalier-clean.png" alt="Cage d'escalier — peinture"><figcaption>Cage d'escalier — peinture</figcaption></figure>
-      </div>
+    <div class="gal">
+      <figure class="gal-item" data-full="assets/realisations/cuisine-clean.png" data-cap="Cuisine — crédence &amp; plan de travail"><img loading="lazy" src="assets/realisations/cuisine-clean.png" alt="Cuisine — crédence et plan de travail"><figcaption>Cuisine — crédence &amp; plan de travail</figcaption></figure>
+      <figure class="gal-item" data-full="assets/realisations/sdb-chaux-clean.png" data-cap="Salle d'eau — enduit à la chaux"><img loading="lazy" src="assets/realisations/sdb-chaux-clean.png" alt="Salle d'eau — enduit à la chaux"><figcaption>Salle d'eau — enduit à la chaux</figcaption></figure>
+      <figure class="gal-item" data-full="assets/realisations/cloisons-clean.png" data-cap="Cloisons &amp; doublages"><img loading="lazy" src="assets/realisations/cloisons-clean.png" alt="Cloisons et doublages"><figcaption>Cloisons &amp; doublages</figcaption></figure>
+      <figure class="gal-item" data-full="assets/realisations/plafond-led-clean.png" data-cap="Plafond décaissé — éclairage LED"><img loading="lazy" src="assets/realisations/plafond-led-clean.png" alt="Plafond décaissé — LED"><figcaption>Plafond décaissé — éclairage LED</figcaption></figure>
+      <figure class="gal-item" data-full="assets/realisations/cage-escalier-clean.png" data-cap="Cage d'escalier — peinture"><img loading="lazy" src="assets/realisations/cage-escalier-clean.png" alt="Cage d'escalier — peinture"><figcaption>Cage d'escalier — peinture</figcaption></figure>
     </div>
   </div>
 </section>
@@ -191,64 +180,7 @@
 <script src="js/main.js"></script>
 <script src="js/animations.js"></script>
 <script>
-  // Galerie 3D circulaire : les cartes forment un anneau qui pivote au défilement
-  (function () {
-    var ring = document.getElementById('ring');
-    var sec = document.querySelector('.ring-sec');
-    if (!ring || !sec) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // CSS gère un rendu empilé
-
-    var cards = Array.prototype.slice.call(ring.children);
-    var n = cards.length;
-    var step = 360 / n;
-
-    // Rayon adapté à la taille des cartes (assez grand pour ne pas se chevaucher)
-    function radius() { return Math.max(300, (ring.offsetWidth / 2) / Math.tan(Math.PI / n) + 60); }
-
-    // Place chaque carte sur l'anneau
-    function placer() {
-      var r = radius();
-      cards.forEach(function (c, i) {
-        c.style.transform = 'rotateY(' + (i * step) + 'deg) translateZ(' + r + 'px)';
-      });
-    }
-    placer();
-    window.addEventListener('resize', placer);
-
-    var rotation = 0;      // angle courant de l'anneau
-    var target = 0;        // angle visé (défini par le scroll)
-    var auto = 0.06;       // légère rotation continue au repos
-    var idle = 0;          // compteur d'inactivité du scroll
-
-    function onScroll() {
-      var rect = sec.getBoundingClientRect();
-      var total = sec.offsetHeight - window.innerHeight;
-      // progression 0→1 pendant que la section défile sous la fenêtre
-      var p = total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 0;
-      target = p * 360 * 1.15;   // un peu plus d'un tour complet sur toute la section
-      idle = 0;
-    }
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-
-    // Boucle de rendu : lissage vers la cible + auto-rotation quand on ne scrolle pas
-    function tick() {
-      idle++;
-      if (idle > 8) target += auto;          // au repos, l'anneau continue doucement
-      rotation += (target - rotation) * 0.08; // easing doux vers la cible
-      // profondeur : les cartes de dos s'estompent
-      ring.style.transform = 'translateZ(-' + radius() + 'px) rotateY(' + rotation + 'deg)';
-      cards.forEach(function (c, i) {
-        var a = ((i * step + rotation) % 360 + 360) % 360;
-        var front = Math.abs(a > 180 ? 360 - a : a);   // 0 = face à nous, 180 = derrière
-        c.style.opacity = Math.max(0.28, 1 - front / 200).toFixed(3);
-      });
-      requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-  })();
-
-  // Lightbox : clic sur une planche ou la photo à la une → plein écran
+  // Lightbox : clic sur une photo → plein écran
   (function () {
     var lb = document.getElementById('lightbox');
     if (!lb) return;
