@@ -3,4 +3,4 @@ Allow: /
 # L'espace admin n'a pas vocation à être référencé
 Disallow: /admin/
 
-Sitemap: https://bouquelymax-debug.github.io/sitemap.xml
+Sitemap: https://maisonmatiere.github.io/sitemap.xml
