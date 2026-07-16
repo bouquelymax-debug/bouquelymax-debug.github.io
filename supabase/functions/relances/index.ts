@@ -138,6 +138,46 @@ Deno.serve(async () => {
       nbLeads = (leads ?? []).length;
     } catch (_e) { /* table leads optionnelle */ }
 
+    // 3bis) Rappels de rendez-vous : e-mail au client la veille de son RDV
+    const demain = new Date(today.getTime() + 86400000);
+    const demainStr = demain.toISOString().split("T")[0];
+    const demainFr = demain.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+    let rdvDemain: any[] = [];
+    let rappelsEnvoyes = 0;
+    const rdvDetails: string[] = [];
+    try {
+      const { data: evts } = await sb.from("evenements").select("*").eq("date", demainStr);
+      rdvDemain = evts ?? [];
+    } catch (_e) { /* table evenements optionnelle */ }
+
+    if (rdvDemain.length) {
+      // Clients liés aux RDV (via le chantier)
+      const evtChIds = [...new Set(rdvDemain.map((e) => e.chantier_id).filter(Boolean))];
+      const evtChMap: Record<string, { client_nom?: string; client_email?: string }> = {};
+      if (evtChIds.length) {
+        const { data: chs2 } = await sb.from("chantiers").select("id, client_nom, client_email").in("id", evtChIds);
+        for (const c of chs2 ?? []) evtChMap[c.id] = { client_nom: c.client_nom, client_email: c.client_email };
+      }
+      for (const ev of rdvDemain) {
+        const heure = ev.heure ? " à " + String(ev.heure).slice(0, 5).replace(":", "h") : "";
+        const lieu = ev.lieu ? " (" + ev.lieu + ")" : "";
+        rdvDetails.push("• " + (ev.titre || "RDV") + heure + lieu);
+        // Rappel au client si le RDV est lié à un chantier avec e-mail
+        const cli = ev.chantier_id ? evtChMap[ev.chantier_id] : null;
+        if (cli && cli.client_email) {
+          const ok = await envoyerEmail(
+            cli.client_email,
+            "Rappel : rendez-vous demain — Maison Matière",
+            `Bonjour ${cli.client_nom || ""},\n\n` +
+            `Petit rappel : nous avons rendez-vous demain, ${demainFr}${heure}${lieu}.\n` +
+            `En cas d'empêchement, prévenez-nous au 06 99 83 56 52.\n\n` +
+            `À demain !\nMaison Matière`
+          );
+          if (ok) rappelsEnvoyes++;
+        }
+      }
+    }
+
     // 4) Résumé à l'artisan
     let resumeEnvoye = false;
     if (!ARTISAN_EMAIL) dernierEmailInfo = "Secret ARTISAN_EMAIL manquant";
@@ -146,8 +186,12 @@ Deno.serve(async () => {
         `Bonjour,\n\nRécapitulatif Maison Matière du ${today.toLocaleDateString("fr-FR")} :\n\n` +
         `• Relances de factures envoyées : ${relancesEnvoyees}\n` +
         (details.length ? details.join("\n") + "\n" : "") +
-        `• Nouvelles demandes de devis aujourd'hui : ${nbLeads}\n\n` +
-        `— Votre assistant Maison Matière`;
+        `• Nouvelles demandes de devis aujourd'hui : ${nbLeads}\n` +
+        (rdvDemain.length
+          ? `\n📅 Demain (${demainFr}) — ${rdvDemain.length} rendez-vous :\n` + rdvDetails.join("\n") +
+            `\n(${rappelsEnvoyes} rappel${rappelsEnvoyes > 1 ? "s" : ""} envoyé${rappelsEnvoyes > 1 ? "s" : ""} aux clients)\n`
+          : `\n📅 Demain : aucun rendez-vous.\n`) +
+        `\n— Votre assistant Maison Matière`;
       resumeEnvoye = await envoyerEmail(ARTISAN_EMAIL, "Récap du jour — Maison Matière", resume);
     }
 
@@ -157,6 +201,8 @@ Deno.serve(async () => {
       relancesEnvoyees,
       facturesSansEmailClient: sansEmail,
       nbLeads,
+      rdvDemain: rdvDemain.length,
+      rappelsRdvEnvoyes: rappelsEnvoyes,
       resumeEnvoye,
       artisanEmailDefini: !!ARTISAN_EMAIL,
       detailEmail: dernierEmailInfo,
