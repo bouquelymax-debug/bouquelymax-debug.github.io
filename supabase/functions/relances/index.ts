@@ -114,19 +114,45 @@ Deno.serve(async () => {
       }
 
       const montant = d.montant ? Number(d.montant).toFixed(2) + " €" : "";
-      const sujet = "Rappel concernant votre facture — Maison Matière";
-      const message =
-        `Bonjour ${ch.client_nom || ""},\n\n` +
-        `Sauf erreur de notre part, la facture ${d.nom}` +
-        (montant ? ` d'un montant de ${montant}` : "") +
-        ` reste en attente de règlement (échéance dépassée).\n` +
-        `Merci de procéder au paiement dès que possible. Si c'est déjà fait, n'en tenez pas compte.\n\n` +
-        `Cordialement,\nMaison Matière — 06 99 83 56 52`;
+      // Relances EN CASCADE : le ton monte avec le retard
+      const joursRetard = Math.max(0, Math.floor((today.getTime() - new Date(d.date_echeance).getTime()) / 86400000));
+      let sujet: string, message: string, niveau: string;
+      const bonjour = `Bonjour ${ch.client_nom || ""},\n\n`;
+      const signature = `\n\nCordialement,\nMaison Matière — 06 99 83 56 52`;
+      if (joursRetard >= 30) {
+        niveau = "mise en demeure";
+        sujet = "Mise en demeure — facture " + d.nom + " · Maison Matière";
+        message = bonjour +
+          `Malgré nos précédents rappels, la facture ${d.nom}` +
+          (montant ? ` d'un montant de ${montant}` : "") +
+          ` demeure impayée depuis ${joursRetard} jours.\n\n` +
+          `La présente vaut MISE EN DEMEURE de régler cette somme sous 8 jours.\n` +
+          `À défaut, nous nous réservons le droit d'engager une procédure de recouvrement, ` +
+          `et des pénalités de retard pourront être appliquées conformément à nos conditions.\n\n` +
+          `Si votre règlement vient d'être envoyé, merci de ne pas tenir compte de ce message.` + signature;
+      } else if (joursRetard >= 15) {
+        niveau = "relance ferme";
+        sujet = "2ᵉ rappel — facture " + d.nom + " en attente · Maison Matière";
+        message = bonjour +
+          `Malgré notre premier rappel, la facture ${d.nom}` +
+          (montant ? ` d'un montant de ${montant}` : "") +
+          ` reste impayée (échéance dépassée de ${joursRetard} jours).\n` +
+          `Merci de régulariser la situation sous 8 jours.\n` +
+          `En cas de difficulté, appelez-nous : nous trouverons une solution ensemble.` + signature;
+      } else {
+        niveau = "rappel";
+        sujet = "Rappel concernant votre facture — Maison Matière";
+        message = bonjour +
+          `Sauf erreur de notre part, la facture ${d.nom}` +
+          (montant ? ` d'un montant de ${montant}` : "") +
+          ` reste en attente de règlement (échéance dépassée).\n` +
+          `Merci de procéder au paiement dès que possible. Si c'est déjà fait, n'en tenez pas compte.` + signature;
+      }
 
       const ok = await envoyerEmail(email, sujet, message);
       if (ok) {
         relancesEnvoyees++;
-        details.push(`• ${ch.client_nom || ""} — ${d.nom} (${montant})`);
+        details.push(`• ${ch.client_nom || ""} — ${d.nom} (${montant}) [${niveau}, J+${joursRetard}]`);
         await sb.from("documents").update({ derniere_relance: todayStr }).eq("id", d.id);
       }
     }
@@ -178,6 +204,50 @@ Deno.serve(async () => {
       }
     }
 
+    // 3ter) Le LUNDI : récap de la semaine à venir + bilan de la semaine passée
+    let blocHebdo = "";
+    if (today.getDay() === 1) {
+      const dans7j = new Date(today.getTime() + 7 * 86400000).toISOString().split("T")[0];
+      const ilYa7j = new Date(today.getTime() - 7 * 86400000).toISOString().split("T")[0];
+
+      // RDV de la semaine
+      let rdvSemaine: any[] = [];
+      try {
+        const { data: evs } = await sb.from("evenements").select("titre, date, heure, lieu")
+          .gte("date", todayStr).lt("date", dans7j).order("date");
+        rdvSemaine = evs ?? [];
+      } catch (_e) { /* optionnel */ }
+
+      // Chantiers en cours
+      const { data: chEnCours } = await sb.from("chantiers").select("client_nom").eq("statut", "en cours");
+
+      // Toutes les factures en attente (pas seulement échues)
+      const { data: fAtt } = await sb.from("documents").select("montant")
+        .eq("type", "facture").eq("statut", "en-attente");
+      const totalAttente = (fAtt ?? []).reduce((s, f) => s + (Number(f.montant) || 0), 0);
+
+      // Encaissé sur les 7 derniers jours
+      const { data: fPay } = await sb.from("documents").select("montant")
+        .eq("type", "facture").eq("statut", "paye").gte("date_paiement", ilYa7j);
+      const encaisse7j = (fPay ?? []).reduce((s, f) => s + (Number(f.montant) || 0), 0);
+
+      const fmtEuro = (n: number) => n.toLocaleString("fr-FR") + " €";
+      const lignesRdv = rdvSemaine.slice(0, 10).map((e) => {
+        const dfr = new Date(e.date + "T00:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
+        const h = e.heure ? " " + String(e.heure).slice(0, 5).replace(":", "h") : "";
+        return `   ${dfr}${h} — ${e.titre || "RDV"}${e.lieu ? " (" + e.lieu + ")" : ""}`;
+      });
+
+      blocHebdo =
+        `\n═══ VOTRE SEMAINE ═══\n` +
+        `• Chantiers en cours : ${(chEnCours ?? []).length}` +
+        ((chEnCours ?? []).length ? ` (${(chEnCours ?? []).map((c) => c.client_nom).slice(0, 5).join(", ")})` : "") + `\n` +
+        `• Rendez-vous cette semaine : ${rdvSemaine.length}\n` +
+        (lignesRdv.length ? lignesRdv.join("\n") + "\n" : "") +
+        `• Reste à encaisser : ${fmtEuro(totalAttente)} (${(fAtt ?? []).length} facture${(fAtt ?? []).length > 1 ? "s" : ""})\n` +
+        `• Encaissé ces 7 derniers jours : ${fmtEuro(encaisse7j)}\n`;
+    }
+
     // 4) Résumé à l'artisan
     let resumeEnvoye = false;
     if (!ARTISAN_EMAIL) dernierEmailInfo = "Secret ARTISAN_EMAIL manquant";
@@ -191,6 +261,7 @@ Deno.serve(async () => {
           ? `\n📅 Demain (${demainFr}) — ${rdvDemain.length} rendez-vous :\n` + rdvDetails.join("\n") +
             `\n(${rappelsEnvoyes} rappel${rappelsEnvoyes > 1 ? "s" : ""} envoyé${rappelsEnvoyes > 1 ? "s" : ""} aux clients)\n`
           : `\n📅 Demain : aucun rendez-vous.\n`) +
+        blocHebdo +
         `\n— Votre assistant Maison Matière`;
       resumeEnvoye = await envoyerEmail(ARTISAN_EMAIL, "Récap du jour — Maison Matière", resume);
     }

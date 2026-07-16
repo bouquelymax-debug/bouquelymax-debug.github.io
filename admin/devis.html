@@ -127,6 +127,7 @@
   <button class="primary" onclick="telechargerPDF()">Télécharger le PDF</button>
   <button onclick="printPDF()">Imprimer</button>
   <button onclick="addRow()">+ Ligne</button>
+  <button onclick="togglePrestas()">📚 Prestations</button>
   <select id="chSelect" style="font-family:inherit;font-size:13px;padding:8px 10px;border-radius:9px;border:none;max-width:170px"><option value="">— Choisir le chantier —</option></select>
   <button class="primary" onclick="envoyerClient()">📤 Envoyer au client</button>
   <button onclick="versFacture()">→ Transformer en facture</button>
@@ -135,6 +136,26 @@
 </div>
 
 <div id="fidBox" style="display:none"></div>
+
+<!-- Bibliothèque de prestations -->
+<div id="prestaPanel" style="display:none;position:fixed;top:110px;left:50%;transform:translateX(-50%);z-index:80;width:min(560px,94vw);background:#fff;border:1px solid #E4DFD5;border-radius:16px;box-shadow:0 24px 70px rgba(30,33,39,.25);font-family:'Hanken Grotesk',system-ui,sans-serif;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #F0ECE4">
+    <b style="font-family:'Space Grotesk';font-size:14px">📚 Mes prestations</b>
+    <input id="prestaSearch" placeholder="Rechercher…" oninput="rendrePrestas()" style="flex:1;border:1px solid #E4DFD5;border-radius:100px;padding:7px 13px;font-size:13px;outline:none">
+    <button onclick="togglePrestas()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#7C766C">×</button>
+  </div>
+  <div id="prestaListe" style="max-height:46vh;overflow-y:auto;padding:6px 8px"></div>
+  <details style="border-top:1px solid #F0ECE4">
+    <summary style="list-style:none;cursor:pointer;padding:11px 16px;font-family:'Space Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9C8E76">＋ Ajouter une prestation à la bibliothèque</summary>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;padding:0 16px 14px">
+      <input id="np-des" placeholder="Désignation" style="border:1px solid #E4DFD5;border-radius:8px;padding:8px 10px;font-size:13px">
+      <input id="np-unite" placeholder="Unité (m², ml…)" value="m²" style="border:1px solid #E4DFD5;border-radius:8px;padding:8px 10px;font-size:13px">
+      <input id="np-prix" type="number" step="0.01" placeholder="Prix HT" style="border:1px solid #E4DFD5;border-radius:8px;padding:8px 10px;font-size:13px">
+      <button onclick="ajouterPresta()" style="border:none;background:#1E2127;color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer">Ajouter</button>
+      <input id="np-detail" placeholder="Détail (optionnel)" style="grid-column:1/-1;border:1px solid #E4DFD5;border-radius:8px;padding:8px 10px;font-size:13px">
+    </div>
+  </details>
+</div>
 
 <div id="signBox" style="display:none;background:#eef7ee;border:1px solid #bfe0bf;border-radius:12px;padding:14px 16px;margin:12px auto;max-width:900px;font-family:system-ui,sans-serif">
   <div style="font-weight:600;margin-bottom:8px">✅ Devis déposé — lien de signature en ligne</div>
@@ -457,6 +478,85 @@ async function numeroAuto() {
   } catch (e) {}
   const num = 'DEV-' + annee + '-' + String(prochain).padStart(4, '0');
   document.querySelector('.doctype .no span').textContent = num;
+}
+
+// ---- Bibliothèque de prestations : lignes types insérées en 1 clic ----
+let PRESTAS = [];
+let prestasChargees = false;
+
+function togglePrestas() {
+  const p = document.getElementById('prestaPanel');
+  const ouvert = p.style.display !== 'none';
+  p.style.display = ouvert ? 'none' : 'block';
+  if (!ouvert && !prestasChargees) chargerPrestas();
+}
+
+async function chargerPrestas() {
+  const liste = document.getElementById('prestaListe');
+  liste.innerHTML = '<div style="padding:14px;color:#7C766C;font-size:13px">Chargement…</div>';
+  const { data, error } = await sbDoc.from('prestations').select('*').order('designation');
+  if (error) {
+    liste.innerHTML = '<div style="padding:14px;color:#c0392b;font-size:13px">La table « prestations » n\'existe pas encore — exécutez le SQL <b>bibliotheque-prestations.sql</b> dans Supabase.</div>';
+    return;
+  }
+  PRESTAS = data || [];
+  prestasChargees = true;
+  rendrePrestas();
+}
+
+function rendrePrestas() {
+  const liste = document.getElementById('prestaListe');
+  const q = (document.getElementById('prestaSearch').value || '').toLowerCase();
+  const items = PRESTAS.filter(p => !q || (p.designation || '').toLowerCase().includes(q) || (p.detail || '').toLowerCase().includes(q));
+  if (!items.length) { liste.innerHTML = '<div style="padding:14px;color:#7C766C;font-size:13px">Aucune prestation' + (q ? ' pour cette recherche' : '') + '.</div>'; return; }
+  liste.innerHTML = items.map(p => `
+    <div onclick="insererPresta('${p.id}')" style="display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:10px;cursor:pointer" onmouseover="this.style.background='#F6F3ED'" onmouseout="this.style.background=''">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13.5px;font-weight:600">${(p.designation || '').replace(/</g, '&lt;')}</div>
+        ${p.detail ? '<div style="font-size:11.5px;color:#7C766C">' + p.detail.replace(/</g, '&lt;') + '</div>' : ''}
+      </div>
+      <span style="font-family:'Space Mono';font-size:11.5px;white-space:nowrap;color:#1E2127"><b>${p.prix != null ? Number(p.prix).toLocaleString('fr-FR') : '—'} €</b> / ${p.unite || 'u.'}</span>
+      <button onclick="event.stopPropagation();supprimerPresta('${p.id}')" title="Retirer de la bibliothèque" style="border:none;background:none;color:#c3392f;cursor:pointer;font-size:14px;opacity:.5">×</button>
+    </div>`).join('');
+}
+
+function insererPresta(id) {
+  const p = PRESTAS.find(x => x.id === id);
+  if (!p) return;
+  const tb = document.getElementById('lines');
+  const tr = document.createElement('tr');
+  tr.innerHTML = '<td class="l"><div contenteditable data-ph="Désignation">' + (p.designation || '') + '</div><small contenteditable data-ph="Détail (optionnel)">' + (p.detail || '') + '</small></td>'
+    + '<td class="num"><span class="qty" contenteditable data-ph="0">1</span></td>'
+    + '<td><span contenteditable data-ph="u.">' + (p.unite || '') + '</span></td>'
+    + '<td class="num"><span class="pu" contenteditable data-ph="0">' + (p.prix != null ? String(p.prix).replace('.', ',') : '') + '</span></td>'
+    + '<td class="num total">—</td>'
+    + '<td class="rowctl"><button title="Supprimer" onclick="delRow(this)">×</button></td>';
+  tb.appendChild(tr);
+  recalc();
+  togglePrestas();  // referme le panneau : la ligne est prête, il ne reste que la quantité
+}
+
+async function supprimerPresta(id) {
+  if (!confirm('Retirer cette prestation de la bibliothèque ?')) return;
+  await sbDoc.from('prestations').delete().eq('id', id);
+  PRESTAS = PRESTAS.filter(p => p.id !== id);
+  rendrePrestas();
+}
+
+async function ajouterPresta() {
+  const des = document.getElementById('np-des').value.trim();
+  if (!des) { alert('Indiquez au moins la désignation.'); return; }
+  const p = {
+    designation: des,
+    detail: document.getElementById('np-detail').value.trim() || null,
+    unite: document.getElementById('np-unite').value.trim() || 'm²',
+    prix: parseFloat(document.getElementById('np-prix').value) || null
+  };
+  const { data, error } = await sbDoc.from('prestations').insert(p).select().single();
+  if (error) { alert('Erreur : ' + error.message); return; }
+  PRESTAS.push(data);
+  document.getElementById('np-des').value = ''; document.getElementById('np-detail').value = ''; document.getElementById('np-prix').value = '';
+  rendrePrestas();
 }
 
 async function envoyerClient() {
